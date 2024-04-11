@@ -1,0 +1,5 @@
+*.ngsc
+*.fastq
+*.fasta
+*.o
+*.gz
