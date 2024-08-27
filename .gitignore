@@ -1,0 +1,11 @@
+*.ngsc
+*.fastq
+*.fasta
+*.o
+*.gz
+.vscode
+*.txt
+*.sh
+*.gz
+main
+testing
