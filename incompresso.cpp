@@ -15,6 +15,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <functional>
 #include <math.h>
 #include <time.h>
 #include <iostream>
@@ -31,9 +32,9 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
 {
   bool local_pattern_found = false;
   bool global_pattern_found = false;
-  bool local_search_done = false;
+  // bool local_search_done = false;
   bool stop_communication = false;
-  Record found_rec;
+  // Record found_rec;
 
   MPI_File input_NGSC;
   Footer footer;
@@ -60,7 +61,7 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
   MPI_Info_free(&Lustre_info);
 
   if (p_rank == 0)
-    printf("[I] INFO: Processing NGSC footer.\n\n");
+    printf("\n[I] INFO: Processing <<%s>> with %d MPI processes and %d threads per process.\n", in_file, g_size, no_threads);
 
   p_timer_start = MPI_Wtime();
   read_buffer = (uchar *)malloc(r_buffer_size * sizeof(uchar));
@@ -91,11 +92,11 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
   footer_bit_stream.Close();
 
   // Creates lps[] for pattern search that will hold the longest prefix suffix values for pattern
-  int32 M = strlen(pat);
-  int32 *lps = (int32 *)malloc(M * sizeof(int32));
+  //int32 M = strlen(pat);
+  //int32 *lps = (int32 *)malloc(M * sizeof(int32));
 
   // Preprocess the pattern (calculate lps[] array)
-  ComputeLPSArray(pat, M, lps);
+  //ComputeLPSArray(pat, M, lps);
 
   uchar untrans_amb_codes[256];
   std::fill_n(untrans_amb_codes + 128 + 0 * 8, 8, 'Y');
@@ -120,8 +121,18 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
     not_looping = true;
   MPI_Allreduce(&not_looping, &stop_communication, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
 
+  // Finds stopping point of loop if communicating to ensure blocking communication always works
+  int32 stopping_index = -1;
+  if (!stop_communication)
+  {
+    int32 p_subblock_size = p_subblocks.size();
+    MPI_Allreduce(&p_subblock_size, &stopping_index, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    stopping_index--;
+  }
+
   // Make calculations for initial position of the decompressed block in FASTQ file
   bool initial_FASTQ_pos = true;
+  int32 cur_index = 0;
   for (std::vector<SubBlock>::iterator it = p_subblocks.begin(); it != p_subblocks.end(); ++it)
   {
     SubBlock sb = *it;
@@ -283,17 +294,42 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
       }
     } 
 
-    // Searches for pattern
+    // Searches for pattern (KMP method)
+    
+    // #pragma omp parallel for num_threads(no_threads) reduction(||:local_pattern_found)
+    // for (uint32 i = 0; i < no_records; ++i)
+    // {
+    //   // This is needed because random data was being included after seq end (TODO check if needed)
+    //   char * trimmed_seq = (char *)malloc(rec[i].seq_len+1);
+    //   strncpy(trimmed_seq, (char *)rec[i].dna_seq, rec[i].seq_len);
+    //   trimmed_seq[rec[i].seq_len] = '\0';
+
+    //   // If the pattern is found then set variable to true
+    //   if (KMPSearch(pat, trimmed_seq, lps) != -1)
+    //   {
+    //     if (to_print && !local_pattern_found)
+    //       #pragma omp critical(matched)
+    //         printf("p%d:%.*sp%d:%.*s\np%d:%.*s\n", p_rank, rec[i].title_len, rec[i].title, p_rank, rec[i].seq_len, rec[i].dna_seq, p_rank, rec[i].qua_len, rec[i].quality);
+    //     local_pattern_found = true;
+    //   }
+    // }
+    
+
+    // Searches for pattern (std::search() method)
+    // // TODO is there a way to not make new string variable and just pass char*s ?
+    // std::string str_pat = pat;
     #pragma omp parallel for num_threads(no_threads) reduction(||:local_pattern_found)
     for (uint32 i = 0; i < no_records; ++i)
     {
-      // This is needed because random data was being included after seq end
-      char * trimmed_seq = (char *)malloc(rec[i].seq_len+1);
-      strncpy(trimmed_seq, (char *)rec[i].dna_seq, rec[i].seq_len);
-      trimmed_seq[rec[i].seq_len] = '\0';
+      // This is needed because random data was being included after seq end (TODO check if needed)
+      // char * trimmed_seq = (char *)malloc(rec[i].seq_len+1);
+      // strncpy(trimmed_seq, (char *)rec[i].dna_seq, rec[i].seq_len);
+      // trimmed_seq[rec[i].seq_len] = '\0';   // TODO may not be needed
+      // std::string str_trimmed_seq = trimmed_seq;
 
       // If the pattern is found then set variable to true
-      if (KMPSearch(pat, trimmed_seq, lps) != -1)
+      auto it = search(rec[i].dna_seq, rec[i].dna_seq+rec[i].seq_len, std::boyer_moore_searcher(pat, pat+strlen(pat)));
+      if (it != rec[i].dna_seq+rec[i].seq_len)
       {
         if (to_print && !local_pattern_found)
           #pragma omp critical(matched)
@@ -302,12 +338,62 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
       }
     }
 
+    // std::string str_pat = pat;
+    // #pragma omp parallel for num_threads(no_threads) reduction(||:local_pattern_found)
+    // for (uint32 i = 0; i < no_records; ++i)
+    // {
+    //   // This is needed because random data was being included after seq end (TODO check if needed)
+    //   char * trimmed_seq = (char *)malloc(rec[i].seq_len+1);
+    //   strncpy(trimmed_seq, (char *)rec[i].dna_seq, rec[i].seq_len);
+    //   trimmed_seq[rec[i].seq_len] = '\0';   // TODO may not be needed
+    //   std::string str_trimmed_seq = trimmed_seq;
+
+    //   // If the pattern is found then set variable to true
+    //   auto it = search(str_trimmed_seq.begin(), str_trimmed_seq.end(), std::default_searcher(str_pat.begin(), str_pat.end()));
+    //   if (it != str_trimmed_seq.end())
+    //   {
+    //     if (to_print && !local_pattern_found)
+    //       #pragma omp critical(matched)
+    //         printf("p%d:%.*sp%d:%.*s\np%d:%.*s\n", p_rank, rec[i].title_len, rec[i].title, p_rank, rec[i].seq_len, rec[i].dna_seq, p_rank, rec[i].qua_len, rec[i].quality);
+    //     local_pattern_found = true;
+    //   }
+    // }
+
+    // Searches for pattern (find() method)
+    // TODO is there a way to not make new string variable and just pass char*s ?
+    // std::string str_pat = pat;
+    // #pragma omp parallel for num_threads(no_threads) reduction(||:local_pattern_found)
+    // for (uint32 i = 0; i < no_records; ++i)
+    // {
+    //   // This is needed because random data was being included after seq end (TODO check if needed)
+    //   // char * trimmed_seq = (char *)malloc(rec[i].seq_len+1);
+    //   // strncpy(trimmed_seq, (char *)rec[i].dna_seq, rec[i].seq_len);
+    //   // trimmed_seq[rec[i].seq_len] = '\0';   // TODO may not be needed
+    //   // std::string str_trimmed_seq = trimmed_seq;
+
+    //   // If the pattern is found then set variable to true
+    //   std::size_t found = str_trimmed_seq.find(str_pat);
+    //   if (found != std::string::npos)
+    //   {
+    //     if (to_print && !local_pattern_found)
+    //       #pragma omp critical(matched)
+    //         printf("p%d:%.*sp%d:%.*s\np%d:%.*s\n", p_rank, rec[i].title_len, rec[i].title, p_rank, rec[i].seq_len, rec[i].dna_seq, p_rank, rec[i].qua_len, rec[i].quality);
+    //     local_pattern_found = true;
+    //   }
+    // }
+
     // Makes sure that all processes still have more subblocks to loop through before using blocking Allreduce function
     if (!stop_communication)
     {
-      if (it == p_subblocks.end()-1)
-        local_search_done = true;
-      MPI_Allreduce(&local_search_done, &stop_communication, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
+
+      // Check if stopping point reached and stop communication if so
+      if (cur_index == stopping_index)
+        stop_communication = true;
+
+      // if (it == p_subblocks.end()-1)
+      //   local_search_done = true;
+      // // TODO do all reduce before for loop to determine stopping point instead of all reduce here
+      // MPI_Allreduce(&local_search_done, &stop_communication, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
 
       // Uses all reduce if possible to determine if any process has found match, if so, end program
       MPI_Allreduce(&local_pattern_found, &global_pattern_found, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
@@ -321,10 +407,12 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
 
     delete[] rec;
     no_records = 0;
+    cur_index++;
   }
 
-  // If communication was stopped before the loop, then check if any processes in loop found a match
-  if(stop_communication)
+  // If communication was stopped before the loop, then check if any processes in loop found a match as long as match not already found 
+  if(stop_communication && !global_pattern_found)
+  // if(stop_communication)
     MPI_Allreduce(&local_pattern_found, &global_pattern_found, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
 
   // Stop timer
@@ -397,7 +485,7 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
   MPI_Info_free(&Lustre_info);
 
   if (p_rank == 0)
-    printf("[I] INFO: Processing NGSC footer.\n\n");
+    printf("\n[I] INFO: Processing <<%s>> with %d MPI processes and %d threads per process.\n", in_file, g_size, no_threads);
 
   p_timer_start = MPI_Wtime();
   read_buffer = (uchar *)malloc(r_buffer_size * sizeof(uchar));
@@ -428,11 +516,11 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
   footer_bit_stream.Close();
 
   // Creates lps[] for pattern search that will hold the longest prefix suffix values for pattern
-  int32 M = strlen(pat);
-  int32 *lps = (int32 *)malloc(M * sizeof(int32));
+  // int32 M = strlen(pat);
+  // int32 *lps = (int32 *)malloc(M * sizeof(int32));
 
   // Preprocess the pattern (calculate lps[] array)
-  ComputeLPSArray(pat, M, lps);
+  // ComputeLPSArray(pat, M, lps);
 
   uchar untrans_amb_codes[256];
   std::fill_n(untrans_amb_codes + 128 + 0 * 8, 8, 'Y');
@@ -615,27 +703,45 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
       }
     }
 
-    // Searches for pattern
+    // Searches for pattern (std::search() method)
     #pragma omp parallel for num_threads(no_threads) reduction(+:local_num_matches)
     for (uint32 i = 0; i < no_records; ++i)
     {
-      // TODO this is needed because a bunch of random data was being included after seq end
-      char * trimmed_seq = (char *)malloc(rec[i].seq_len+1);
-      strncpy(trimmed_seq, (char *)rec[i].dna_seq, rec[i].seq_len);
-      trimmed_seq[rec[i].seq_len] = '\0';
-      
-      if (KMPSearch(pat, trimmed_seq, lps) != -1)
+
+      // If the pattern is found then add to match counter
+      auto it = search(rec[i].dna_seq, rec[i].dna_seq+rec[i].seq_len, std::boyer_moore_searcher(pat, pat+strlen(pat)));
+      if (it != rec[i].dna_seq+rec[i].seq_len)
       {
-
-        // Prints out record match was found
         if (to_print)
-          #pragma omp critical(all_print)
-            printf("%.*s%.*s\n%.*s\n", rec[i].title_len, rec[i].title, rec[i].seq_len, rec[i].dna_seq, rec[i].qua_len, rec[i].quality);
-
+          #pragma omp critical(matched)
+            printf("p%d:%.*sp%d:%.*s\np%d:%.*s\n", p_rank, rec[i].title_len, rec[i].title, p_rank, rec[i].seq_len, rec[i].dna_seq, p_rank, rec[i].qua_len, rec[i].quality);
+        
         // Adds to match counter 
         local_num_matches++;
       }
-    }   
+    }
+
+    // // Searches for pattern (KMP Method)
+    // #pragma omp parallel for num_threads(no_threads) reduction(+:local_num_matches)
+    // for (uint32 i = 0; i < no_records; ++i)
+    // {
+    //   // TODO this is needed because a bunch of random data was being included after seq end
+    //   char * trimmed_seq = (char *)malloc(rec[i].seq_len+1);
+    //   strncpy(trimmed_seq, (char *)rec[i].dna_seq, rec[i].seq_len);
+    //   trimmed_seq[rec[i].seq_len] = '\0';
+      
+    //   if (KMPSearch(pat, trimmed_seq, lps) != -1)
+    //   {
+
+    //     // Prints out record match was found
+    //     if (to_print)
+    //       #pragma omp critical(all_print)
+    //         printf("%.*s%.*s\n%.*s\n", rec[i].title_len, rec[i].title, rec[i].seq_len, rec[i].dna_seq, rec[i].qua_len, rec[i].quality);
+
+    //     // Adds to match counter 
+    //     local_num_matches++;
+    //   }
+    // }   
 
     delete[] rec;
     no_records = 0;
@@ -672,7 +778,6 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
     test_file.open(file_path);
     test_file << p_timer_end-p_timer_start;
   }
-
 
   MPI_File_close(&input_NGSC);
 }
@@ -784,7 +889,7 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
   MPI_Info_free(&Lustre_info);
 
   if (p_rank == 0)
-    printf("[I] INFO: Processing NGSC footer.\n\n");
+    printf("\n[I] INFO: Processing <<%s>> with %d MPI processes and %d threads per process.\n", in_file, g_size, no_threads);
 
   p_timer_start = MPI_Wtime();
   read_buffer = (uchar *)malloc(r_buffer_size * sizeof(uchar));
@@ -1014,17 +1119,10 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
       free(write_buffer);
 
     // Calculates sum of previous sequence lengths plus newline
-    int64 new_len = 0;
     for (uint32 i = 0; i < no_records; ++i)
     {
-      rec[i].prev_seq_len = prev_seq_len;
+      rec[i].prev_seq_qua_len = prev_seq_len;
       prev_seq_len += rec[i].seq_len + 1;
-
-      // new_len += rec[i].prev_seq_qua_len == 0 ? ;
-      // if(prev_seq_len != new_len)
-      // {
-      // printf("not equal: %lld != %lld, accumulation = %lld\n", prev_seq_len, new_len, rec[i].prev_seq_qua_len);
-      // }
     }
 
     w_buffer_size = prev_title_len + prev_seq_len;
@@ -1040,7 +1138,6 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
 
     // Copy rec to the write_buffer
     uchar FASTATitleChar[] = ">";
-    int32 writen = 0;
     // --------------------------------------------------------------------------------------------
     #pragma omp parallel default(shared) num_threads(no_threads)
     {
@@ -1048,7 +1145,7 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
       for (uint32 i = 0; i < no_records; ++i)
       {
         // Adjusts rec_start_pos to fit FASTA format
-        int64 rec_start_pos = rec[i].prev_title_len + rec[i].prev_seq_len;
+        int64 rec_start_pos = rec[i].prev_title_len + rec[i].prev_seq_qua_len;
 
         // Creates length variables
         int32 t_len = rec[i].title_len;
@@ -1056,14 +1153,11 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
 
         std::copy(FASTATitleChar, FASTATitleChar + 1, write_buffer + rec_start_pos);
         rec_start_pos += 1;
-        writen += 1;
 
         std::copy(rec[i].title + 1, rec[i].title + t_len, write_buffer + rec_start_pos);
         rec_start_pos += t_len - 1; // - 1 here because first char of title was written in previous statement
-        writen += t_len - 1 ;
 
         std::copy(rec[i].dna_seq, rec[i].dna_seq + d_len, write_buffer + rec_start_pos);
-        writen += d_len;
       }
     }
 

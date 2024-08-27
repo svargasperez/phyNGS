@@ -2,7 +2,7 @@
 
 CCMPI = mpic++
 CCFLAGS = -O3 -m64  -Wall -pedantic
-CCFLAGS += -fopenmp -std=c++11
+CCFLAGS += -fopenmp -std=c++17
 C_PROG = phyNGSC
 D_PROG = phyNGSD
 I_PROG = incompresso

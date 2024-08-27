@@ -54,7 +54,7 @@ void DecompressData(const char * in_file, const char * out_file, int32 g_size, i
   MPI_Info_free(&Lustre_info);
 
   if (p_rank == 0)
-    printf("[I] INFO: Processing NGSC footer.\n\n");
+    printf("\n[I] INFO: Processing <<%s>> with %d MPI processes and %d threads per process.\n", in_file, g_size, no_threads);
 
   p_timer_start = MPI_Wtime();
   //write_buffer = (char*) malloc((1 << 23) * sizeof(char));

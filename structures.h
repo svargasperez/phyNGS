@@ -240,9 +240,7 @@ struct Record
 	std::vector<uint32> fields_end_pos;
 
 	int64 prev_title_len; 	// Cummulative length of prev titles
-	int64 prev_seq_qua_len;	// Cummulative length of prev dna seqs, pluses and qualities
-	int64 prev_seq_len;		// Cummulative length of prev dna seqs and \n
-
+	int64 prev_seq_qua_len;	// Cummulative length of prev dna seqs, pluses and qualities **NOTE** in the ngsc to fasta conversion only stores seqs and \n 
 
 	uchar* title;
 	uchar* dna_seq;
@@ -264,7 +262,6 @@ Record::Record()
 	,	title_len(0)
 	,	prev_title_len(0)
 	,	prev_seq_qua_len(0)
-	,	prev_seq_len(0)
 	,	title(new uchar[100]) // For now let's set it to 100, then try to have a var with max title len in subblock
 	,	dna_seq(NULL)
 	,	quality(NULL)
