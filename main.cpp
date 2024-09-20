@@ -31,13 +31,13 @@
 // Remove unneeded includes
 // make sure that parameter error output has correct program name (not ./main)
 // What other checks need to be added?
-// add error handeling for incompresso parameters
+// add error handling for incompresso parameters
 // test all error types
 // spell check all comments
 // Test decompression still works after changing parameters
 // Does pattern variable need to be ended in \0?
 
-// incompressoo
+// incompresso
 // ngsc file is input
 // For find seq, do yes no search, do all match search
 
@@ -65,7 +65,7 @@ int main(int argc, char ** argv)
     if (argc < 2)
     {
         if (p_rank == 0)
-            fprintf(stderr, "\n[E] ERROR: Less than one argument provided. See program documentaion for command examples.\n");
+            fprintf(stderr, "\n[E] ERROR: Less than one argument provided. See program documentation for command examples.\n");
         MPI_Finalize();
         exit(1);
     }
@@ -102,7 +102,7 @@ int main(int argc, char ** argv)
         exit(1);
     }
 
-    // Handels errors for compression and decompression parameters
+    // Handles errors for compression and decompression parameters
     if (p_mode == 0 || p_mode == 1)
     {
         // Checks that there is the correct number of parameters
@@ -139,19 +139,21 @@ int main(int argc, char ** argv)
             i_mode = 2;
         else if (strcmp(argv[4], "-freqinfo") == 0)
             i_mode = 3;
+        else if (strcmp(argv[4], "-trim") == 0)
+            i_mode = 4;
         else
         {
             if (p_rank == 0)
             {
                 fprintf(stderr, "\n[E] ERROR: Invalid incompresso mode. Options:\n");
-                fprintf(stderr, "                 -findfirst (or) -findall (or) -fasta (or) -freqinfo:                           Program mode is find first sequence match, or final all sequence matches, or convert to fasta, or find nucleotide frequency information.\n");
+                fprintf(stderr, "                 -findfirst (or) -findall (or) -fasta (or) -freqinfo (or) -trim:                           Program mode is find first sequence match, final all sequence matches, convert to fasta, find nucleotide frequency information, or trim sequence.\n");
             }
             MPI_Finalize();
             exit(1);
         }
 
         // Checks parameters for search modes
-        if ((i_mode == 0 || i_mode == 1) && argc < 6 && 7 < argc) 
+        if ((i_mode == 0 || i_mode == 1) && (argc != 6 || argc != 7)) 
         {
             if (p_rank == 0)
             {
@@ -165,8 +167,8 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "                 -i:                                   Program mode is incompresso.\n");                
                 fprintf(stderr, "                 num_threads:                          Number of threads to be used per MPI process (must be at least than 1).\n");
                 fprintf(stderr, "                 input_filename.ngsc:                  Name of NGSC input file.\n");
-                fprintf(stderr, "                 -findfirst (or) -findall:            Incompresso mode is find first or all sequence matches.\n");
-                fprintf(stderr, "                 -p: (Optional)                        Option to print records of first matches found (Off by default).\n");
+                fprintf(stderr, "                 -findfirst (or) -findall:             Incompresso mode is find first or all sequence matches.\n");
+                fprintf(stderr, "                 -p: (Optional)                        Option to print records of matches found (Off by default).\n");
                 fprintf(stderr, "                 sequence_to_find:                     The sequence for the program to search for.\n");
             }
             MPI_Finalize();
@@ -211,6 +213,32 @@ int main(int argc, char ** argv)
             MPI_Finalize();
             exit(1);
         }
+
+
+        // Checks parameters for sequence trimming mode
+        if (i_mode == 4 && (argc != 8 || argc != 9)) 
+        {
+            if (p_rank == 0)
+            {
+                fprintf(stderr, "\n[E] ERROR: Incorrect number of arguments. Usage:\n");
+                fprintf(stderr, "\n           mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -5 [-p] trim_sequence.\n");
+                fprintf(stderr, "                                                 or\n");
+                fprintf(stderr, "\n           mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -3 [-p] trim_sequence.\n");
+                fprintf(stderr, "                 mpiexec:                              Command to run MPI applications.\n");
+                fprintf(stderr, "                 -np p:                                Number of MPI processes to be used, where p is a number greater than 1.\n");
+                fprintf(stderr, "                 ./main:                               main application.\n");
+                fprintf(stderr, "                 -i:                                   Program mode is incompresso.\n");                
+                fprintf(stderr, "                 num_threads:                          Number of threads to be used per MPI process (must be at least than 1).\n");
+                fprintf(stderr, "                 input_filename.ngsc:                  Name of NGSC file for decompression.\n");
+                fprintf(stderr, "                 output_filename.ngsc:                 Name of resulting NGSC file (created).\n");
+                fprintf(stderr, "                 -trim:                                Incompresso mode is trim sequence.\n");
+                fprintf(stderr, "                 -5 (or) -3:                           Sequence trimming occurs at 5' end or 3' end.\n");
+                fprintf(stderr, "                 -p: (Optional)                        Option to print records of first matches found (Off by default).\n");
+                fprintf(stderr, "                 trim_sequence:                        The sequence for the program to search for and trim sequences based on.\n");
+            }
+            MPI_Finalize();
+            exit(1);
+        }
     }
 
     // Gets file input and output names
@@ -245,8 +273,8 @@ int main(int argc, char ** argv)
         exit(1);
     }
 
-    // Checks parameter file types for sequence searchs and nucleotide frequency information modes
-    if ((i_mode == 0 || i_mode == 1 || i_mode == 3) && in_file_end.compare("ngsc") != 0 )
+    // Checks input parameter file type for sequence searches, nucleotide frequency information, and trim modes
+    if ((i_mode == 0 || i_mode == 1 || i_mode == 3 || i_mode == 4) && in_file_end.compare("ngsc") != 0 )
     {
         if (p_rank == 0)
             fprintf(stderr, "\n[E] ERROR: Incorrect input file ending. Correct ending is: input_filename.ngsc.\n");
@@ -278,15 +306,27 @@ int main(int argc, char ** argv)
             pattern = argv[5];
     }
 
+    // Gets pattern to search and trim for from user if incompresso mode is sequence trim
+    if (p_mode == 2 && i_mode == 4)
+    {
+        if (strcmp(argv[7], "-p") == 0)
+        {
+            pattern = argv[8];
+            to_print = true;
+        }
+        else
+            pattern = argv[7];
+    }
+
     // If hybrid not supported, then set to only one thread
     if (provided < MPI_THREAD_FUNNELED)
     {
         if (p_rank == 0)
-            printf("\n[W] WARNING: Hybrid parallization not supported. Setting number of threads to 1.\n");
+            printf("\n[W] WARNING: Hybrid parallelization not supported. Setting number of threads to 1.\n");
         no_threads = 1;
     }
 
-    // Fetermines if program is compressing or decompressing data
+    // Determines if program is compressing or decompressing data
     if (p_mode == 0)
         CompressData(in_file.c_str(), out_file.c_str(), g_size, p_rank, no_threads);
     else if (p_mode == 1)
@@ -301,6 +341,8 @@ int main(int argc, char ** argv)
             ToFASTA(in_file.c_str(), out_file.c_str(), g_size, p_rank, no_threads); 
         else if (i_mode == 3)
             printf("Not implemented yet.\n"); 
+        else if (i_mode == 4)
+            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
     } 
     // TODO when delete[] rec; is in in incompresso, memory error occurs here
     MPI_Barrier(MPI_COMM_WORLD);

@@ -1,11 +1,11 @@
-*.ngsc
-*.fastq
-*.fasta
 *.o
-*.gz
 .vscode
-*.txt
-*.sh
-*.gz
 main
 testing
+*.gz
+*.ngsc
+*.fasta
+
+// Ignores all fastq files that do not start with input
+*.fastq
+!input*.fastq
