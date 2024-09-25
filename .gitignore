@@ -5,7 +5,5 @@ testing
 *.gz
 *.ngsc
 *.fasta
-
-// Ignores all fastq files that do not start with input
+*performanceOutput*
 *.fastq
-!input*.fastq
