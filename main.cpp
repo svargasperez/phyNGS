@@ -153,7 +153,7 @@ int main(int argc, char ** argv)
         }
 
         // Checks parameters for search modes
-        if ((i_mode == 0 || i_mode == 1) && (argc != 6 || argc != 7)) 
+        if ((i_mode == 0 || i_mode == 1) && (argc != 6 && argc != 7)) 
         {
             if (p_rank == 0)
             {
@@ -216,7 +216,7 @@ int main(int argc, char ** argv)
 
 
         // Checks parameters for sequence trimming mode
-        if (i_mode == 4 && (argc != 8 || argc != 9)) 
+        if (i_mode == 4 && (argc != 8 && argc != 9)) 
         {
             if (p_rank == 0)
             {
@@ -342,7 +342,8 @@ int main(int argc, char ** argv)
         else if (i_mode == 3)
             printf("Not implemented yet.\n"); 
         else if (i_mode == 4)
-            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
+            // Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
+            printf("Not implemented yet.\n"); 
     } 
     // TODO when delete[] rec; is in in incompresso, memory error occurs here
     MPI_Barrier(MPI_COMM_WORLD);

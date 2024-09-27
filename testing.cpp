@@ -26,9 +26,9 @@ const int T_GROW_FACTOR = 2;
 const int SEQ_LEN_GROW_FACTOR = 2;
 const char *SEQ_LETTERS[] = {"A", "C", "T", "G"};
 const char *SEQUENCES_ALL[] = {"TATA", "TGTTTTATTATATTCATTAGATT", "TGTTTTATTATATTCATTAGATTCCTTGCACTGGGCTTTGAAATTC"}; // For findAll(), //TATA, 1/2 seq, 1/4 seq
-const char *SEQUENCES_FIRST[] = {"GCTGAGGAAGGAGAATGCCATGAACCTGGGAGGTGGAGCTTGCAGTGAGCCGAGATCACGCCACTGCACTCCAGCCTAGGAGACAGAGAAAG", "GGAAAATAAATCCACCAAAACAATCATGGAAGGTTATGTGTTCAGCAAAGATCCTTCTTTGAATCTATCAGATATCTACTGAGCACTGAATA", "GTCTTCACCTCAAAAAAATCCTTCCAAAGGATATTAGTTTCATCACCAAAGCATAACTTCTCCTCTGTCTCCTGCACCTTCACCCCCTTCAC", "XGAAAATAAATCCACCAAAACAATCATGGAAGGTTATGTGTTCAGCAAAGATCCTTCTTTGAATCTATCAGATATCTACTGAGCACTGAATA"}; // For findFirst() , //10%, 50%, 90%, NONE 
+const char *SEQUENCES_FIRST[] = {"AGGGATTGAAGACTTCAGGGGAGGAAGTAACTGCAGATGTAATTTAAAAAAATCAAAAGAACAGGAAATGGAGCCTGGACATGTGACTGATT", "AACTGAAACAGTGGCCACTCTCAACCAAGGAAGAGGGAACTCAGGACAAAGAAAAGCAGCATTTAGCTGACAATCTTCAACCTTTCTTCTCT", "AAAAAAAAGAAAAAAACACCACACAAAAAAAAAAAAAATTTTTTTTTTCTTCTGTTTCTTGTTTCGTCGCACACACCAAAAAACAAGCAGTG", "XGAAAATAAATCCACCAAAACAATCATGGAAGGTTATGTGTTCAGCAAAGATCCTTCTTTGAATCTATCAGATATCTACTGAGCACTGAATA"}; // For findFirst() , //10%, 50%, 90%, NONE 
 const char *SEQUENCES_GREP[] = {"", "", "", ""}; 
-const std::string INPUT_FILE = "input1GB.fastq";
+const std::string INPUT_FILE = "input8GB.fastq";
 const std::string CONNECT_LOGIC_STR = "\n";
 const std::string COMP_FILE = "comCmds.sh";
 const std::string DECOMP_FILE = "decomCmds.sh";
@@ -96,7 +96,7 @@ void testDecompression()
     // Runs through all process combinations
     std::string beginning = "mpiexec -np ";
     std::string middle = " ./main -d ";
-    std::string end = " comp10MB.ngsc decomp_testing_out.fastq";
+    std::string end = " comp8GB.ngsc decomp_testing_out.fastq";
     std::string combined_commands = "";
     for (int num_process = MIN_P; num_process <= MAX_P; num_process *= P_GROW_FACTOR)
     {
@@ -126,7 +126,7 @@ void testFindFirst()
     // Runs through all process combinations
     std::string beginning = "mpiexec -np ";
     std::string middle = " ./main -i ";
-    std::string end = " comp10MB.ngsc -findfirst ";
+    std::string end = " comp8GB.ngsc -findfirst ";
     std::string combined_commands = "";
     for (int num_process = MIN_P; num_process <= MAX_P; num_process *= P_GROW_FACTOR)
     {
@@ -160,7 +160,7 @@ void testFindAll()
     // Runs through all process combinations
     std::string beginning = "mpiexec -np ";
     std::string middle = " ./main -i ";
-    std::string end = " comp10MB.ngsc -findall ";
+    std::string end = " comp8GB.ngsc -findall ";
     std::string combined_commands = "";
     for (int num_process = MIN_P; num_process <= MAX_P; num_process *= P_GROW_FACTOR)
     {
@@ -216,7 +216,7 @@ void testToFASTA()
     // Runs through all process combinations
     std::string beginning = "mpiexec -np ";
     std::string middle = " ./main -i ";
-    std::string end = " comp10MB.ngsc fasta_testing_out.fasta -fasta";
+    std::string end = " comp8GB.ngsc fasta_testing_out.fasta -fasta";
     std::string combined_commands = "";
     for (int num_process = MIN_P; num_process <= MAX_P; num_process *= P_GROW_FACTOR)
     {
