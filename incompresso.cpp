@@ -741,6 +741,7 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
     //     // Adds to match counter 
     //     local_num_matches++;
     //   }
+    //   free(trimmed_seq)
     // }   
 
     delete[] rec;
