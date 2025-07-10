@@ -17,14 +17,15 @@ OBJST =
 .cpp.o:
 	$(CCMPI) $(CCFLAGS) -c $< -o $@
 
-$(C_PROG): phyNGSC.o $(OBJSC)
-	$(CCMPI) $(CCFLAGS) -o $(C_PROG) phyNGSC.o $(OBJSC)
+# These targets removed because they don't contain main() functions
+# $(C_PROG): phyNGSC.o $(OBJSC)
+#	$(CCMPI) $(CCFLAGS) -o $(C_PROG) phyNGSC.o $(OBJSC)
 
-$(D_PROG): phyNGSD.o $(OBJSD)
-	$(CCMPI) $(CCFLAGS) -o $(D_PROG) phyNGSD.o $(OBJSD)
+# $(D_PROG): phyNGSD.o $(OBJSD)
+#	$(CCMPI) $(CCFLAGS) -o $(D_PROG) phyNGSD.o $(OBJSD)
 
-$(I_PROG): incompresso.o $(OBJSI)
-	$(CCMPI) $(CCFLAGS) -o $(I_PROG) phyNGSD.o $(OBJSI)
+# $(I_PROG): incompresso.o $(OBJSI)
+#	$(CCMPI) $(CCFLAGS) -o $(I_PROG) phyNGSD.o $(OBJSI)
 
 $(M_PROG): main.o $(OBJSM)
 	$(CCMPI) $(CCFLAGS) -o $(M_PROG) main.o $(OBJSM)
@@ -33,9 +34,9 @@ $(T_PROG): testing.o $(OBJST)
 	$(CCMPI) $(CCFLAGS) -o $(T_PROG) testing.o $(OBJST)
 
 
-all: $(C_PROG) $(D_PROG) $(I_PROG) $(M_PROG) $(T_PROG)
+all: $(M_PROG) $(T_PROG)
 
 clean:
 	-rm *.o
-	-rm $(C_PROG) $(D_PROG) $(I_PROG) $(M_PROG) $(T_PROG)
+	-rm $(M_PROG) $(T_PROG)
 	-rm *.dif ctest*.ngsc dtest*.fastq
