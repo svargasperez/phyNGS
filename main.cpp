@@ -130,16 +130,17 @@ int main(int argc, char ** argv)
     // Handles errors for incompresso
     if (p_mode == 2)
     {
+        // TODO: Repeated argc checking
         // Determines incompresso mode
-        if (strcmp(argv[4], "-findfirst") == 0)
+        if (argc >= 5 && strcmp(argv[4], "-findfirst") == 0)
             i_mode = 0;
-        else if (strcmp(argv[4], "-findall") == 0)
+        else if (argc >= 5 && strcmp(argv[4], "-findall") == 0)
             i_mode = 1;
-        else if (strcmp(argv[5], "-fasta") == 0)
+        else if (argc >= 6 && strcmp(argv[5], "-fasta") == 0)
             i_mode = 2;
-        else if (strcmp(argv[4], "-freqinfo") == 0)
+        else if (argc >= 5 && strcmp(argv[4], "-freqinfo") == 0)
             i_mode = 3;
-        else if (strcmp(argv[4], "-trim") == 0)
+        else if (argc >= 5 && strcmp(argv[4], "-trim") == 0)
             i_mode = 4;
         else
         {
