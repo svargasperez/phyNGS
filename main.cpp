@@ -140,7 +140,7 @@ int main(int argc, char ** argv)
             i_mode = 2;
         else if (argc >= 5 && strcmp(argv[4], "-freqinfo") == 0)
             i_mode = 3;
-        else if (argc >= 5 && strcmp(argv[4], "-trim") == 0)
+        else if (argc >= 6 && strcmp(argv[5], "-trim") == 0)
             i_mode = 4;
         else
         {
