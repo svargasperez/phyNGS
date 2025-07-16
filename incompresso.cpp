@@ -428,7 +428,7 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
   }
 
   if (p_rank == 0)
-    printf("\nRANK\tDECO_TIME\n----------------------------------------------\n");
+    printf("\nRANK\tFIND_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
 
   MPI_Barrier(MPI_COMM_WORLD);
   printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
@@ -763,7 +763,7 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
     printf("Number of sequence matches in file: %d.\n", global_num_matches);
     
   if (p_rank == 0)
-    printf("\nRANK\tDECO_TIME\n----------------------------------------------\n");
+    printf("\nRANK\tFIND_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
 
   MPI_Barrier(MPI_COMM_WORLD);
   printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
@@ -1189,7 +1189,7 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
   p_timer_end = MPI_Wtime();
 
   if (p_rank == 0)
-    printf("\nRANK\tDECO_TIME\n----------------------------------------------\n");
+    printf("\nRANK\tFASTA_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
 
   MPI_Barrier(MPI_COMM_WORLD);
   printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
