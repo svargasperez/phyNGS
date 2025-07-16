@@ -973,13 +973,17 @@ void CompressData(const char * in_file, const char * out_file, int32 g_size, int
 
 
   // TODO Temp for performance testing
+  MPI_Barrier(MPI_COMM_WORLD);
   if (p_rank == 0)
   {
     std::string folder_name = "./performanceOutput-Com";
 
     // makes output directory if needed
     if (mkdir(folder_name.c_str(), 0777) != -1)
+    {
+      fflush(stdout);
       printf("Performance output directory made.\n");
+    }
 
     std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + ".txt";
     std::ofstream test_file;
