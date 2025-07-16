@@ -23,6 +23,7 @@
 //#include "bit_stream.h"
 //#include "huffman.h"
 //#include "tasks.h"
+#include "dev_modes.h"
 #include "phyNGSC.h"
 #include "phyNGSD.h"
 #include "incompresso.h"
@@ -60,6 +61,31 @@ int main(int argc, char ** argv)
     MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
     MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &g_size);
+
+    // // Testing debug and test printing
+    // if (p_rank == 0)
+    // {
+    //     printf("Current debug status: %d\n", get_mode_status(Mode::DEBUG));
+        
+    //     printf("Turning debug on\n");
+    //     set_mode_status(Mode::DEBUG, true);
+
+    //     printf("Current debug status: %d\n", get_mode_status(Mode::DEBUG));
+        
+    //     mode_print(Mode::DEBUG, "[DEBUG] Testing (%d) 2 (%d)\n", 1, 3);
+
+    //     mode_print(Mode::TEST, "[TEST] This shouldn't appear!\n");
+    //     set_mode_status(Mode::TEST, true);
+    //     mode_print(Mode::TEST, "[TEST] This test should appear\n");
+
+    //     printf("Turning debug off and attempting to print\n");
+    //     set_mode_status(Mode::DEBUG, false);
+    //     mode_print(Mode::DEBUG, "[DEBUG] This shouldn't appear!\n");
+
+    //     mode_print(Mode::TEST, "[TEST] Test should appear after debug off\n");
+    //     set_mode_status(Mode::TEST, false);
+    //     mode_print(Mode::TEST, "[TEST] This shouldn't appear!\n");
+    // }
 
     // Checks that there is at least one argument provided by user
     if (argc < 2)
