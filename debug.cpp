@@ -31,7 +31,7 @@ void debug_off()
 
 void debug_print(const char *format, ...)
 {
-    // Return if debug mode is active
+    // Return if debug mode is inactive
     if (debug_status == false)
         return;
 

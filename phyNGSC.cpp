@@ -19,13 +19,14 @@
 #include <map>
 #include <math.h>
 #include <algorithm>
+#include <sys/stat.h>
 #include "defs.h"
 #include "utils.h"
 #include "structures.h"
 #include "bit_stream.h"
 #include "huffman.h"
 #include "tasks.h"
-#include <sys/stat.h>
+#include "debug.h"
 
 // --------------------------------------------------------------------------------------------
 void CompressData(const char * in_file, const char * out_file, int32 g_size, int32 p_rank, int32 no_threads)
@@ -126,7 +127,8 @@ void CompressData(const char * in_file, const char * out_file, int32 g_size, int
   rec_start_pos = r_buffer_curr_pos;
   p_block.BCSS = 0;
 
-  // printf("[%d]{OV::%lld}\n", p_rank, r_buffer_curr_pos);
+  debug_print("[%d]{OV::%lld}\n", p_rank, r_buffer_curr_pos);
+
   // Begin processing FASTQ file with each p_rank's corresponding working region
   // --------------------------------------------------------------------------------------------
   while(p_bytes_read < p_working_region)
@@ -664,7 +666,7 @@ void CompressData(const char * in_file, const char * out_file, int32 g_size, int
     p_write_buff_bit_stream.PutDWord(sb_offset);
 
 
-    // printf("%d\t%llu\n", p_rank, sb_offset);
+    // debug_print("%d\t%llu\n", p_rank, sb_offset);
 
 
     // Prepare for next read from the FASTQ working region
@@ -965,30 +967,34 @@ void CompressData(const char * in_file, const char * out_file, int32 g_size, int
   // Stop timer
   p_timer_end = MPI_Wtime();
 
-  if (p_rank == 0)
-    printf("\nRANK\tCOMP_TIME\tN_BLOCK\tN_SUBBLOCKS\n----------------------------------------------\n");
-
-  MPI_Barrier(MPI_COMM_WORLD);
-  printf("%03d\t%f\t%ld\t%d\n", p_rank, p_timer_end-p_timer_start, timestamps.size(), p_subblock_count);
-
-
-  // TODO Temp for performance testing
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (p_rank == 0)
+  // Debug: Print and save runtime performance
+  if (get_debug() == true)
   {
-    std::string folder_name = "./performanceOutput-Com";
-
-    // makes output directory if needed
-    if (mkdir(folder_name.c_str(), 0777) != -1)
+    if (p_rank == 0)
+      printf("\nRANK\tCOMP_TIME\tN_BLOCK\tN_SUBBLOCKS\n----------------------------------------------\n");
+  
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("%03d\t%f\t%ld\t%d\n", p_rank, p_timer_end-p_timer_start, timestamps.size(), p_subblock_count);
+  
+  
+    // TODO Temp for performance testing
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (p_rank == 0)
     {
-      fflush(stdout);
-      printf("Performance output directory made.\n");
+      std::string folder_name = "./performanceOutput-Com";
+  
+      // makes output directory if needed
+      if (mkdir(folder_name.c_str(), 0777) != -1)
+      {
+        fflush(stdout);
+        printf("Performance output directory made.\n");
+      }
+  
+      std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + ".txt";
+      std::ofstream test_file;
+      test_file.open(file_path);
+      test_file << p_timer_end-p_timer_start;
     }
-
-    std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + ".txt";
-    std::ofstream test_file;
-    test_file.open(file_path);
-    test_file << p_timer_end-p_timer_start;
   }
 
 

@@ -20,12 +20,13 @@
 #include <time.h>
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 #include "defs.h"
 #include "structures.h"
 #include "bit_stream.h"
 #include "tasks.h"
 #include "incompresso.h"
-#include <sys/stat.h>
+#include "debug.h"
 
 // --------------------------------------------------------------------------------------------
 bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to_print, int32 no_threads)
@@ -427,31 +428,35 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
       printf("Sequence not found in file.\n");
   }
 
-  if (p_rank == 0)
-    printf("\nRANK\tFIND_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
-
-  MPI_Barrier(MPI_COMM_WORLD);
-  printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
-
-  // TODO Temp for performance testing
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (p_rank == 0)
+  // Debug: Print and save runtime performance
+  if (get_debug() == true)
   {
-    std::string folder_name = "./performanceOutput-Findfirst";
-
-    // makes output directory if needed
-    if (mkdir(folder_name.c_str(), 0777) != -1)
+    if (p_rank == 0)
+      printf("\nRANK\tFIND_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
+  
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
+  
+    // TODO Temp for performance testing
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (p_rank == 0)
     {
-      fflush(stdout);
-      printf("Performance output directory made.\n");
+      std::string folder_name = "./performanceOutput-Findfirst";
+  
+      // makes output directory if needed
+      if (mkdir(folder_name.c_str(), 0777) != -1)
+      {
+        fflush(stdout);
+        printf("Performance output directory made.\n");
+      }
+  
+      std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + "," + pat + ".txt";
+      std::ofstream test_file;
+      test_file.open(file_path);
+      test_file << p_timer_end-p_timer_start;
     }
-
-    std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + "," + pat + ".txt";
-    std::ofstream test_file;
-    test_file.open(file_path);
-    test_file << p_timer_end-p_timer_start;
   }
-
+  
   MPI_File_close(&input_NGSC);
   return global_pattern_found;
 }
@@ -762,30 +767,34 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
   if (p_rank == 0)
     printf("Number of sequence matches in file: %d.\n", global_num_matches);
     
-  if (p_rank == 0)
-    printf("\nRANK\tFIND_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
-
-  MPI_Barrier(MPI_COMM_WORLD);
-  printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
-
-
-  // TODO Temp for performance testing
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (p_rank == 0)
+  // Debug: Print and save runtime performance
+  if (get_debug() == true)
   {
-    std::string folder_name = "./performanceOutput-Findall";
-
-    // makes output directory if needed
-    if (mkdir(folder_name.c_str(), 0777) != -1)
+    if (p_rank == 0)
+      printf("\nRANK\tFIND_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
+  
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
+  
+  
+    // TODO Temp for performance testing
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (p_rank == 0)
     {
-      fflush(stdout);
-      printf("Performance output directory made.\n");
+      std::string folder_name = "./performanceOutput-Findall";
+  
+      // makes output directory if needed
+      if (mkdir(folder_name.c_str(), 0777) != -1)
+      {
+        fflush(stdout);
+        printf("Performance output directory made.\n");
+      }
+  
+      std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + "," + pat + ".txt";
+      std::ofstream test_file;
+      test_file.open(file_path);
+      test_file << p_timer_end-p_timer_start;
     }
-
-    std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + "," + pat + ".txt";
-    std::ofstream test_file;
-    test_file.open(file_path);
-    test_file << p_timer_end-p_timer_start;
   }
 
   MPI_File_close(&input_NGSC);
@@ -1188,30 +1197,34 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
   // Stop timer
   p_timer_end = MPI_Wtime();
 
-  if (p_rank == 0)
-    printf("\nRANK\tFASTA_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
-
-  MPI_Barrier(MPI_COMM_WORLD);
-  printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
-
-
-  // TODO Temp for performance testing
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (p_rank == 0)
+  // Debug: Print and save runtime performance
+  if (get_debug() == true)
   {
-    std::string folder_name = "./performanceOutput-FASTA";
-
-    // makes output directory if needed
-    if (mkdir(folder_name.c_str(), 0777) != -1)
+    if (p_rank == 0)
+      printf("\nRANK\tFASTA_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
+  
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
+  
+  
+    // TODO Temp for performance testing
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (p_rank == 0)
     {
-      fflush(stdout);
-      printf("Performance output directory made.\n");
+      std::string folder_name = "./performanceOutput-FASTA";
+  
+      // makes output directory if needed
+      if (mkdir(folder_name.c_str(), 0777) != -1)
+      {
+        fflush(stdout);
+        printf("Performance output directory made.\n");
+      }
+  
+      std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + ".txt";
+      std::ofstream test_file;
+      test_file.open(file_path);
+      test_file << p_timer_end-p_timer_start;
     }
-
-    std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + ".txt";
-    std::ofstream test_file;
-    test_file.open(file_path);
-    test_file << p_timer_end-p_timer_start;
   }
 
   MPI_File_close(&input_NGSC);

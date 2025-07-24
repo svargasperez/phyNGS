@@ -62,23 +62,26 @@ int main(int argc, char ** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &g_size);
 
-    // Testing debug and test printing
-    if (p_rank == 0)
-    {
-        debug_print("[DEBUG] This shouldn't appear!\n");
-        printf("Current debug status: %d\n", get_debug());
+    // // Testing debug and test printing
+    // if (p_rank == 0)
+    // {
+    //     debug_print("[DEBUG] This shouldn't appear!\n");
+    //     printf("Current debug status: %d\n", get_debug());
         
-        printf("Turning debug on\n");
-        debug_on();
+    //     printf("Turning debug on\n");
+    //     debug_on();
 
-        printf("Current debug status: %d\n", get_debug());
+    //     printf("Current debug status: %d\n", get_debug());
         
-        debug_print("[DEBUG] Testing (%d) 2 (%d)\n", 1, 3);
+    //     debug_print("[DEBUG] Testing (%d) 2 (%d)\n", 1, 3);
 
-        printf("Turning debug off and attempting to print\n");
-        debug_off();
-        debug_print("[DEBUG] This shouldn't appear!\n");
-    }
+    //     printf("Turning debug off and attempting to print\n");
+    //     debug_off();
+    //     debug_print("[DEBUG] This shouldn't appear!\n");
+    // }
+
+    // TODO: Set debug from command line flag
+    debug_on();
 
     // Checks that there is at least one argument provided by user
     if (argc < 2)
