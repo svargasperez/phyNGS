@@ -11,7 +11,7 @@ T_PROG = testing
 OBJSC = bit_stream.o huffman.o tasks.o
 OBJSD = bit_stream.o huffman.o tasks.o
 OBJSI = bit_stream.o huffman.o tasks.o
-OBJSM = bit_stream.o huffman.o tasks.o dev_modes.o phyNGSC.o phyNGSD.o incompresso.o
+OBJSM = bit_stream.o huffman.o tasks.o debug.o phyNGSC.o phyNGSD.o incompresso.o
 OBJST = 
 
 .cpp.o:

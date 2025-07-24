@@ -5,24 +5,23 @@
   
   phyNGSC Authors: Sandino Vargas-Perez and Fahad Saeed
   DSRC Authors: Sebastian Deorowicz and Szymon Grabowski
-  Development Modes Author: Juniper Pasternak
+  Debug Author: Juniper Pasternak
 */
 
 #ifndef _DEV_MODES_H
 #define _DEV_MODES_H
 
-#include "defs.h"
-
-enum class Mode { DEBUG = 0, TEST };
+// --------------------------------------------------------------------------------------------
+bool get_debug();
 
 // --------------------------------------------------------------------------------------------
-bool get_mode_status(Mode mode);
+void debug_on();
 
 // --------------------------------------------------------------------------------------------
-void set_mode_status(Mode mode, bool status);
+void debug_off();
 
 // --------------------------------------------------------------------------------------------
-void mode_print(Mode mode, const char * format, ...);
+void debug_print(const char *format, ...);
 
 
 #endif
