@@ -80,8 +80,13 @@ int main(int argc, char ** argv)
     //     debug_print("[DEBUG] This shouldn't appear!\n");
     // }
 
-    // TODO: Set debug from command line flag
-    debug_on();
+    // Check last parameter for debug flag
+    if (strcmp(argv[argc - 1], "-debug") == 0)
+    {
+        if (p_rank == 0)
+            printf("[I] Running program with debug mode enabled.\n");
+        debug_on();
+    }
 
     // Checks that there is at least one argument provided by user
     if (argc < 2)
@@ -128,7 +133,7 @@ int main(int argc, char ** argv)
     if (p_mode == 0 || p_mode == 1)
     {
         // Checks that there is the correct number of parameters
-        if (argc != 5) 
+        if (argc != 5 && argc != 6) 
         {
             if (p_rank == 0)
             {
@@ -176,7 +181,7 @@ int main(int argc, char ** argv)
         }
 
         // Checks parameters for search modes
-        if ((i_mode == 0 || i_mode == 1) && (argc != 6 && argc != 7)) 
+        if ((i_mode == 0 || i_mode == 1) && (argc < 6 || argc > 8)) 
         {
             if (p_rank == 0)
             {
@@ -199,7 +204,7 @@ int main(int argc, char ** argv)
         }
 
         // Checks parameters for convert to fasta mode
-        if (i_mode == 2 && argc != 6) 
+        if (i_mode == 2 && argc != 6 && argc != 7) 
         {
             if (p_rank == 0)
             {
@@ -219,7 +224,7 @@ int main(int argc, char ** argv)
         }
 
         // Checks parameters for convert to nucleotide frequency mode
-        if (i_mode == 3 && argc != 5) 
+        if (i_mode == 3 && argc != 5 && argc != 6) 
         {
             if (p_rank == 0)
             {
@@ -239,7 +244,7 @@ int main(int argc, char ** argv)
 
 
         // Checks parameters for sequence trimming mode
-        if (i_mode == 4 && (argc != 8 && argc != 9)) 
+        if (i_mode == 4 && (argc < 8 || argc > 10)) 
         {
             if (p_rank == 0)
             {
