@@ -148,6 +148,7 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "                 num_threads:                          Number of threads to be used per MPI process (must be at least 1).\n");
                 fprintf(stderr, "                 input_filename.fastq (or) .ngsc:      Name of FASTQ file for compression or NGSC for decompression.\n");
                 fprintf(stderr, "                 output_filename.ngsc (or) .fastq:     Name of resulting NGSC file for compression or FASTQ for decompression (created).\n");
+                fprintf(stderr, "                 -debug: (Optional)                    Option to enable debug output (Off by default).\n");
             }
             MPI_Finalize();
             exit(1);
@@ -198,6 +199,7 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "                 -findfirst (or) -findall:             Incompresso mode is find first or all sequence matches.\n");
                 fprintf(stderr, "                 -p: (Optional)                        Option to print records of matches found (Off by default).\n");
                 fprintf(stderr, "                 sequence_to_find:                     The sequence for the program to search for.\n");
+                fprintf(stderr, "                 -debug: (Optional)                    Option to enable debug output (Off by default).\n");
             }
             MPI_Finalize();
             exit(1);
@@ -218,6 +220,7 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "                 input_filename.ngsc:                  Name of NGSC file for decompression.\n");
                 fprintf(stderr, "                 output_filename.fasta:                Name of resulting FASTQ file (created).\n");
                 fprintf(stderr, "                 -fasta:                               Incompresso mode is convert to fasta.\n");
+                fprintf(stderr, "                 -debug: (Optional)                    Option to enable debug output (Off by default).\n");
             }
             MPI_Finalize();
             exit(1);
@@ -237,6 +240,7 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "                 num_threads:                          Number of threads to be used per MPI process (must be at least than 1).\n");
                 fprintf(stderr, "                 input_filename.ngsc:                  Name of NGSC input file.\n");
                 fprintf(stderr, "                 -freqinfo:                            Incompresso mode is find nucleotide frequency information.\n");
+                fprintf(stderr, "                 -debug: (Optional)                    Option to enable debug output (Off by default).\n");
             }
             MPI_Finalize();
             exit(1);
@@ -263,6 +267,7 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "                 -5 (or) -3:                           Sequence trimming occurs at 5' end or 3' end.\n");
                 fprintf(stderr, "                 -p: (Optional)                        Option to print records of first matches found (Off by default).\n");
                 fprintf(stderr, "                 trim_sequence:                        The sequence for the program to search for and trim sequences based on.\n");
+                fprintf(stderr, "                 -debug: (Optional)                    Option to enable debug output (Off by default).\n");
             }
             MPI_Finalize();
             exit(1);
