@@ -437,24 +437,10 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
     MPI_Barrier(MPI_COMM_WORLD);
     printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
   
-    // TODO Temp for performance testing
+    // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-    {
-      std::string folder_name = "./performanceOutput-Findfirst";
-  
-      // makes output directory if needed
-      if (mkdir(folder_name.c_str(), 0777) != -1)
-      {
-        fflush(stdout);
-        printf("Performance output directory made.\n");
-      }
-  
-      std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + "," + pat + ".txt";
-      std::ofstream test_file;
-      test_file.open(file_path);
-      test_file << p_timer_end-p_timer_start;
-    }
+      write_performance_file(p_timer_end-p_timer_start, "Findfirst", g_size, no_threads, pat);
   }
   
   MPI_File_close(&input_NGSC);
@@ -777,24 +763,10 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
     printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
   
   
-    // TODO Temp for performance testing
+    // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-    {
-      std::string folder_name = "./performanceOutput-Findall";
-  
-      // makes output directory if needed
-      if (mkdir(folder_name.c_str(), 0777) != -1)
-      {
-        fflush(stdout);
-        printf("Performance output directory made.\n");
-      }
-  
-      std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + "," + pat + ".txt";
-      std::ofstream test_file;
-      test_file.open(file_path);
-      test_file << p_timer_end-p_timer_start;
-    }
+      write_performance_file(p_timer_end-p_timer_start, "Findall", g_size, no_threads, pat);
   }
 
   MPI_File_close(&input_NGSC);
@@ -1207,24 +1179,10 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
     printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
   
   
-    // TODO Temp for performance testing
+    // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-    {
-      std::string folder_name = "./performanceOutput-FASTA";
-  
-      // makes output directory if needed
-      if (mkdir(folder_name.c_str(), 0777) != -1)
-      {
-        fflush(stdout);
-        printf("Performance output directory made.\n");
-      }
-  
-      std::string file_path = "./" + folder_name + "/" + std::to_string(g_size) + "," + std::to_string(no_threads) + ".txt";
-      std::ofstream test_file;
-      test_file.open(file_path);
-      test_file << p_timer_end-p_timer_start;
-    }
+      write_performance_file(p_timer_end-p_timer_start, "FASTA", g_size, no_threads, "");
   }
 
   MPI_File_close(&input_NGSC);

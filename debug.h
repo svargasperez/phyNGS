@@ -11,6 +11,9 @@
 #ifndef _DEV_MODES_H
 #define _DEV_MODES_H
 
+#include <string>
+#include "defs.h"
+
 // --------------------------------------------------------------------------------------------
 bool get_debug();
 
@@ -23,5 +26,7 @@ void debug_off();
 // --------------------------------------------------------------------------------------------
 void debug_print(const char *format, ...);
 
+// --------------------------------------------------------------------------------------------
+void write_performance_file(double runtime, const std::string mode, int32 g_size, int32 no_threads, const std::string pattern);
 
 #endif
