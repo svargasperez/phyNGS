@@ -17,16 +17,19 @@
 //#include <map>
 //#include <math.h>
 //#include <algorithm>
-//#include "defs.h"
 //#include "utils.h"
 //#include "structures.h"
 //#include "bit_stream.h"
 //#include "huffman.h"
 //#include "tasks.h"
+#include "defs.h"
 #include "debug.h"
 #include "phyNGSC.h"
 #include "phyNGSD.h"
 #include "incompresso.h"
+
+using PM = ProgramMode;
+using ICM = InCompressoMode;
 
 //TODO
 // Remove unneeded includes
@@ -54,7 +57,8 @@
 int main(int argc, char ** argv)
 {
     int32 g_size, p_rank, provided;
-    int32 p_mode = -1, i_mode = -1;
+    ProgramMode p_mode = PM::Unset;
+    InCompressoMode i_mode = ICM::Unset;
     char *pattern = NULL;
     bool to_print = false;
 
@@ -99,11 +103,11 @@ int main(int argc, char ** argv)
     
     // Determines program mode
     if (strcmp(argv[1], "-c") == 0)
-        p_mode = 0;
+        p_mode = PM::Compress;
     else if (strcmp(argv[1], "-d") == 0)
-        p_mode = 1;
+        p_mode = PM::Decompress;
     else if (strcmp(argv[1], "-i") == 0)
-        p_mode = 2;
+        p_mode = PM::InCompresso;
     else
     {
         if (p_rank == 0)
@@ -130,7 +134,7 @@ int main(int argc, char ** argv)
     }
 
     // Handles errors for compression and decompression parameters
-    if (p_mode == 0 || p_mode == 1)
+    if (p_mode == PM::Compress || p_mode == PM::Decompress)
     {
         // Checks that there is the correct number of parameters
         if (argc != 5 && argc != 6) 
@@ -156,20 +160,20 @@ int main(int argc, char ** argv)
     }
 
     // Handles errors for incompresso
-    if (p_mode == 2)
+    if (p_mode == PM::InCompresso)
     {
         // TODO: Repeated argc checking
         // Determines incompresso mode
         if (argc >= 5 && strcmp(argv[4], "-findfirst") == 0)
-            i_mode = 0;
+            i_mode = ICM::FindFirst;
         else if (argc >= 5 && strcmp(argv[4], "-findall") == 0)
-            i_mode = 1;
+            i_mode = ICM::FindAll;
         else if (argc >= 6 && strcmp(argv[5], "-fasta") == 0)
-            i_mode = 2;
+            i_mode = ICM::FASTA;
         else if (argc >= 5 && strcmp(argv[4], "-freqinfo") == 0)
-            i_mode = 3;
+            i_mode = ICM::FreqInfo;
         else if (argc >= 6 && strcmp(argv[5], "-trim") == 0)
-            i_mode = 4;
+            i_mode = ICM::Trim;
         else
         {
             if (p_rank == 0)
@@ -182,7 +186,7 @@ int main(int argc, char ** argv)
         }
 
         // Checks parameters for search modes
-        if ((i_mode == 0 || i_mode == 1) && (argc < 6 || argc > 8)) 
+        if ((i_mode == ICM::FindFirst || i_mode == ICM::FindAll) && (argc < 6 || argc > 8)) 
         {
             if (p_rank == 0)
             {
@@ -206,7 +210,7 @@ int main(int argc, char ** argv)
         }
 
         // Checks parameters for convert to fasta mode
-        if (i_mode == 2 && argc != 6 && argc != 7) 
+        if (i_mode == ICM::FASTA && argc != 6 && argc != 7) 
         {
             if (p_rank == 0)
             {
@@ -227,7 +231,7 @@ int main(int argc, char ** argv)
         }
 
         // Checks parameters for convert to nucleotide frequency mode
-        if (i_mode == 3 && argc != 5 && argc != 6) 
+        if (i_mode == ICM::FreqInfo && argc != 5 && argc != 6) 
         {
             if (p_rank == 0)
             {
@@ -248,7 +252,7 @@ int main(int argc, char ** argv)
 
 
         // Checks parameters for sequence trimming mode
-        if (i_mode == 4 && (argc < 8 || argc > 10)) 
+        if (i_mode == ICM::Trim && (argc < 8 || argc > 10)) 
         {
             if (p_rank == 0)
             {
@@ -283,7 +287,7 @@ int main(int argc, char ** argv)
     std::string out_file_end = out_file.substr(out_file.find_last_of(".")+1);
 
     // Checks parameter file types for compression
-    if (p_mode == 0 && (in_file_end.compare("fastq") != 0 || out_file_end.compare("ngsc") != 0))
+    if (p_mode == PM::Compress && (in_file_end.compare("fastq") != 0 || out_file_end.compare("ngsc") != 0))
     {
         if (p_rank == 0)
         {
@@ -295,7 +299,7 @@ int main(int argc, char ** argv)
     }
 
     // Checks parameter order for decompression
-    if (p_mode == 1 && (in_file_end.compare("ngsc") != 0 || out_file_end.compare("fastq") != 0))
+    if (p_mode == PM::Decompress && (in_file_end.compare("ngsc") != 0 || out_file_end.compare("fastq") != 0))
     {
         if (p_rank == 0)
         {
@@ -307,7 +311,7 @@ int main(int argc, char ** argv)
     }
 
     // Checks input parameter file type for sequence searches, nucleotide frequency information, and trim modes
-    if ((i_mode == 0 || i_mode == 1 || i_mode == 3 || i_mode == 4) && in_file_end.compare("ngsc") != 0 )
+    if ((i_mode == ICM::FindFirst || i_mode == ICM::FindAll || i_mode == ICM::FreqInfo || i_mode == ICM::Trim) && in_file_end.compare("ngsc") != 0 )
     {
         if (p_rank == 0)
             fprintf(stderr, "\n[E] ERROR: Incorrect input file ending. Correct ending is: input_filename.ngsc.\n");
@@ -316,7 +320,7 @@ int main(int argc, char ** argv)
     }
 
     // Checks parameter order for fasta conversion
-    if (i_mode == 2 && (in_file_end.compare("ngsc") != 0 || out_file_end.compare("fasta") != 0))
+    if (i_mode == ICM::FASTA && (in_file_end.compare("ngsc") != 0 || out_file_end.compare("fasta") != 0))
     {
         if (p_rank == 0)
         {
@@ -328,7 +332,7 @@ int main(int argc, char ** argv)
     }
 
     // Gets pattern to search for from user if incompresso mode is sequence search
-    if (p_mode == 2 && (i_mode == 0 || i_mode == 1))
+    if (p_mode == PM::InCompresso && (i_mode == ICM::FindFirst || i_mode == ICM::FindAll))
     {
         if (strcmp(argv[5], "-p") == 0)
         {
@@ -340,7 +344,7 @@ int main(int argc, char ** argv)
     }
 
     // Gets pattern to search and trim for from user if incompresso mode is sequence trim
-    if (p_mode == 2 && i_mode == 4)
+    if (p_mode == PM::InCompresso && i_mode == ICM::Trim)
     {
         if (strcmp(argv[7], "-p") == 0)
         {
@@ -359,22 +363,22 @@ int main(int argc, char ** argv)
         no_threads = 1;
     }
 
-    // Determines if program is compressing or decompressing data
-    if (p_mode == 0)
+    // Determines which function to call using the parsed CLI arguments
+    if (p_mode == PM::Compress)
         CompressData(in_file.c_str(), out_file.c_str(), g_size, p_rank, no_threads);
-    else if (p_mode == 1)
+    else if (p_mode == PM::Decompress)
         DecompressData(in_file.c_str(), out_file.c_str(), g_size, p_rank, no_threads);
-    else if (p_mode == 2)
+    else if (p_mode == PM::InCompresso)
     {
-        if (i_mode == 0)
+        if (i_mode == ICM::FindFirst)
             FindFirst(in_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
-        else if (i_mode == 1)
+        else if (i_mode == ICM::FindAll)
             FindAll(in_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
-        else if (i_mode == 2)
+        else if (i_mode == ICM::FASTA)
             ToFASTA(in_file.c_str(), out_file.c_str(), g_size, p_rank, no_threads); 
-        else if (i_mode == 3)
+        else if (i_mode == ICM::FreqInfo)
             printf("Not implemented yet.\n"); 
-        else if (i_mode == 4)
+        else if (i_mode == ICM::Trim)
             // Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
             printf("Not implemented yet.\n"); 
     } 

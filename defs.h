@@ -52,6 +52,22 @@ typedef unsigned long long uint64;
 
 
 // --------------------------------------------------------------------------------------------
+enum class ProgramMode {
+	Unset = -1,
+    Compress = 0,
+    Decompress,
+    InCompresso
+};
+
+enum class InCompressoMode {
+	Unset = -1,
+    FindFirst = 0,
+    FindAll,
+    FASTA,
+    FreqInfo,
+    Trim
+};
+
 enum MemoryModeEnum
 {
 	MEM_MODE_NONE = 0, 
