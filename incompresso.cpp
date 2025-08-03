@@ -5,7 +5,7 @@
 
   phyNGSC Authors: Sandino Vargas-Perez and Fahad Saeed
   DSRC Authors: Sebastian Deorowicz and Szymon Grabowski
-  Incompresso Implementation Author: Cole Koryto
+  Incompresso Implementation Authors: Cole Koryto, Juniper Pasternak
 */
 
 #include <stdio.h>
@@ -1187,4 +1187,10 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
 
   MPI_File_close(&input_NGSC);
   MPI_File_close(&output_FASTA);
+}
+
+// --------------------------------------------------------------------------------------------
+void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank, char *pat, bool to_print, int32 no_threads)
+{
+
 }

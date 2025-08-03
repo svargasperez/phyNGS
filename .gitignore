@@ -2,6 +2,7 @@
 .vscode
 main
 testing
+temp_trim
 *.gz
 *.ngsc
 *.fasta

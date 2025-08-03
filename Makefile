@@ -13,6 +13,7 @@ OBJSD = bit_stream.o huffman.o tasks.o
 OBJSI = bit_stream.o huffman.o tasks.o
 OBJSM = bit_stream.o huffman.o tasks.o debug.o phyNGSC.o phyNGSD.o incompresso.o
 OBJST = 
+OBJS_TRIM = defs.o
 
 .cpp.o:
 	$(CCMPI) $(CCFLAGS) -c $< -o $@
@@ -33,6 +34,8 @@ $(M_PROG): main.o $(OBJSM)
 $(T_PROG): testing.o $(OBJST)
 	$(CCMPI) $(CCFLAGS) -o $(T_PROG) testing.o $(OBJST)
 
+temp_trim.cpp:
+	$(CCMPI) $(CCFLAGS) -o temp_trim temp_trim.o $(OBJS_TRIM)
 
 all: $(M_PROG) $(T_PROG)
 
