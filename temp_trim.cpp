@@ -11,8 +11,11 @@ using std::string;
 
 void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
 {
+    const char *seq_end = dna_seq + seq_len;
+
     // TODO: What should the final logic be regarding small sequences?
     // Do not trim if sequence is smaller than pattern
+    // TODO: Fix when seq_len == pat.size() (or other edge cases, check start/end indicies at end)
     if (seq_len < pat.size())
     {
         printf("Sequence length (%d) shorter than pattern (%lu)\n", seq_len, pat.size());
@@ -20,24 +23,41 @@ void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
         return;
     }
 
-    // TODO: Possible optimization with tracking a new_len variable instead of end_pos
+    // TODO: Possible optimization with tracking pointers instead of indicies
     int32 new_start_pos = 0;     // Inclusive start index
     int32 new_end_pos = seq_len; // Exclusive end index
 
-    // Check if beginning of dna sequence has the pattern
-    if (pat.compare(0, pat.size(), dna_seq, 0, pat.size()) == 0)
+    // Check if start of dna sequence has the pattern
+    // TODO: Improve naive algorithm (KMP?)
+    const char *search_start = strstr(dna_seq, pat.c_str());
+    int32 index = search_start ? search_start - dna_seq : -1;
+    printf("First index of pattern in string: %d\n", index);
+
+    // Trim if end of dna sequence has the pattern
+    if (search_start)
     {
         printf("5' end contains adapter sequence\n");
-        new_start_pos = pat.size();
+        new_start_pos = std::distance(dna_seq, search_start) + pat.size();
     }
     else
         printf("No 5' match with adapter sequence\n");
 
     // Check if end of dna sequence has the pattern
-    if (pat.compare(0, pat.size(), dna_seq, seq_len - pat.size(), pat.size()) == 0)
+    int32 search_offset = MAX(seq_len / 2, pat.size());
+    auto bm_searcher = std::boyer_moore_searcher(pat.begin(), pat.end());
+    const char *search_end = std::search(seq_end - search_offset, seq_end, bm_searcher);
+
+    if (search_end != seq_end)
+        index = std::distance(dna_seq, search_end);
+    else
+        index = -1;
+    printf("Last index of pattern in string: %d\n", index);
+
+    // Trim if end of dna sequence has the pattern
+    if (search_end != seq_end)
     {
         printf("3' end contains adapter sequence\n");
-        new_end_pos = seq_len - pat.size();
+        new_end_pos = std::distance(dna_seq, search_end);
     }
     else
         printf("No 3' match with adapter sequence\n");
@@ -54,8 +74,6 @@ int main(int argc, char **argv)
     int32 seq_len = strlen(dna_seq);
 
     string pat = "TATA";
-
-    // char *it = std::search(dna_seq, dna_seq+seq_len, std::boyer_moore_searcher(pat, pat+pat_len));
     // std::cout << "'" << it << "'" << "\n";
 
     // Possibly overallocate on stack b/c trimmed seq will never exceed full seq
