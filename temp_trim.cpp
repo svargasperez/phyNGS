@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     char *dna_seq = argv[1];
     int32 seq_len = strlen(dna_seq);
 
-    string pat = "TATA";
+    string pat = argv[2];
     // std::cout << "'" << it << "'" << "\n";
 
     // Possibly overallocate on stack b/c trimmed seq will never exceed full seq
