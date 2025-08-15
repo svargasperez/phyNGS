@@ -27,14 +27,20 @@ void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
     int32 new_start_pos = 0;     // Inclusive start index
     int32 new_end_pos = seq_len; // Exclusive end index
 
+    int32 index;
+    int32 search_offset = MAX(seq_len / 2, pat.size());
+
     // Check if start of dna sequence has the pattern
-    // TODO: Improve naive algorithm (KMP?)
-    const char *search_start = strstr(dna_seq, pat.c_str());
-    int32 index = search_start ? search_start - dna_seq : -1;
+    auto bm_searcher = std::boyer_moore_searcher(pat.begin(), pat.end());
+    const char *search_start = std::search(dna_seq, dna_seq + search_offset, bm_searcher);
+    if (search_start != dna_seq + search_offset)
+        index = std::distance(dna_seq, search_start);
+    else
+        index = -1;
     printf("First index of pattern in string: %d\n", index);
 
     // Trim if end of dna sequence has the pattern
-    if (search_start)
+    if (search_start != dna_seq + search_offset)
     {
         printf("5' end contains adapter sequence\n");
         new_start_pos = std::distance(dna_seq, search_start) + pat.size();
@@ -42,9 +48,7 @@ void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
     else
         printf("No 5' match with adapter sequence\n");
 
-    // Check if end of dna sequence has the pattern
-    int32 search_offset = MAX(seq_len / 2, pat.size());
-    auto bm_searcher = std::boyer_moore_searcher(pat.begin(), pat.end());
+    // Check if end of dna sequence has the pattern FIXME: FINDS LEFTMOST!!!
     const char *search_end = std::search(seq_end - search_offset, seq_end, bm_searcher);
 
     if (search_end != seq_end)
@@ -74,7 +78,6 @@ int main(int argc, char **argv)
     int32 seq_len = strlen(dna_seq);
 
     string pat = argv[2];
-    // std::cout << "'" << it << "'" << "\n";
 
     // Possibly overallocate on stack b/c trimmed seq will never exceed full seq
     char trimmed_dna_seq[seq_len];
