@@ -9,17 +9,26 @@
 
 using std::string;
 
-int partial_search(const char *text, const string pat)
+int32 partial_search(const char *text, const char *text_end, const string pat, bool left_side)
 {
-    for (int32 i = 1; i <= pat.size() / 2; i++)
-    {
-        int32 len = pat.size() - i;
-        // cout << pat.substr(i, len);
-        if (pat.compare(i, len, text, len) == 0)
-            return len;
-    }
+    if (left_side)
+        // Try to match pat[i:] to beginning of text
+        for (int32 i = 1; i <= pat.size() / 2; i++)
+        {
+            int32 len = pat.size() - i;
+            if (pat.compare(i, len, text, len) == 0)
+                return len;
+        }
+    else
+        // Try to match pat[0:len] to end of text
+        for (int32 i = 1; i <= pat.size() / 2; i++)
+        {
+            int32 len = pat.size() - i;
+            if (pat.compare(0, len, text_end - len, len) == 0)
+                return len;
+        }
 
-    return -1;
+    return -1; // No match
 }
 
 void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
@@ -56,11 +65,11 @@ void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
     // Trim if start of dna sequence has the pattern
     if (search_start != dna_seq + search_offset)
     {
-        printf("5' end contains adapter sequence\n");
+        printf("5' end contains adapter sequence (index %d)\n", index);
         new_start_pos = std::distance(dna_seq, search_start) + pat.size();
     }
     // Trim if dna sequence has part of the pattern
-    else if ((partial_len = partial_search(dna_seq, pat)) != -1)
+    else if ((partial_len = partial_search(dna_seq, seq_end, pat, true)) != -1)
     {
         printf("5' end contains partial adapter sequence (%d/%lu)\n",
                partial_len, pat.size());
@@ -82,8 +91,14 @@ void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
     // Trim if end of dna sequence has the pattern
     if (search_end != seq_end)
     {
-        printf("3' end contains adapter sequence\n");
+        printf("3' end contains adapter sequence (index %d)\n", index);
         new_end_pos = std::distance(dna_seq, search_end);
+    }
+    else if ((partial_len = partial_search(dna_seq, seq_end, pat, false)) != -1)
+    {
+        printf("3' end contains partial adapter sequence (%d/%lu)\n",
+               partial_len, pat.size());
+        new_end_pos = seq_len - partial_len;
     }
     else
         printf("No 3' match with adapter sequence\n");
@@ -106,8 +121,6 @@ int main(int argc, char **argv)
 
     trim(trimmed_dna_seq, dna_seq, seq_len, pat);
     printf("Trimmed sequence: %s\n", trimmed_dna_seq);
-
-    std::cout << "Partial search index: " << partial_search(dna_seq, pat) << "\n";
 
     exit(EXIT_SUCCESS);
 }
