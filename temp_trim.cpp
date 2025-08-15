@@ -48,8 +48,9 @@ void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
     else
         printf("No 5' match with adapter sequence\n");
 
-    // Check if end of dna sequence has the pattern FIXME: FINDS LEFTMOST!!!
-    const char *search_end = std::search(seq_end - search_offset, seq_end, bm_searcher);
+    // Check if end of dna sequence has the pattern
+    // TODO: Improve naive algorithm (possibly custom right-most Boyer Moore)
+    const char *search_end = std::find_end(seq_end - search_offset, seq_end, pat.begin(), pat.end());
 
     if (search_end != seq_end)
         index = std::distance(dna_seq, search_end);
