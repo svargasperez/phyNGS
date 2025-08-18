@@ -9,6 +9,20 @@
 
 using std::string;
 
+/**
+ * @brief Attempts to find part of a pattern on an end of text,
+ *        as if the pattern continued off the edge of the text.
+ *        At least half of the pattern must be present.
+ *        
+ *        Example: text="o bar baz qux" with pat="foo bar" (left side);
+ *        would return 5 because "(fo)o bar". has 5/7 characters.
+ * 
+ * @param text C string of the text to be searched.
+ * @param text_end Pointer to the end of the C string to be searched.
+ * @param pat Pattern to search for in the C string text.
+ * @param left_side Flag, whether to search the left or right side.
+ * @return The length of the partial pattern within the text, or -1.
+ */
 int32 partial_search(const char *text, const char *text_end, const string pat, bool left_side)
 {
     if (left_side)
