@@ -5,7 +5,7 @@
   
   phyNGSC Authors: Sandino Vargas-Perez and Fahad Saeed
   DSRC Authors: Sebastian Deorowicz and Szymon Grabowski
-  Incompresso Implementation Author: Cole Koryto
+  Incompresso Implementation Authors: Cole Koryto, Juniper Pasternak
 */
 
 #ifndef _INCOMPRESSO_H
@@ -28,5 +28,7 @@ void ComputeLPSArray(char* pat, int M, int* lps);
 // --------------------------------------------------------------------------------------------
 void ToFASTA (const char * in_file, const char * out_file, int32 g_size, int32 p_rank, int32 no_threads);
 
+// --------------------------------------------------------------------------------------------
+void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank, char *pat, bool to_print, int32 no_threads);
 
 #endif

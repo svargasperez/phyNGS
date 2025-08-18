@@ -266,10 +266,10 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "                 -i:                                   Program mode is incompresso.\n");                
                 fprintf(stderr, "                 num_threads:                          Number of threads to be used per MPI process (must be at least than 1).\n");
                 fprintf(stderr, "                 input_filename.ngsc:                  Name of NGSC file for decompression.\n");
-                fprintf(stderr, "                 output_filename.ngsc:                 Name of resulting NGSC file (created).\n");
+                fprintf(stderr, "                 output_filename.fastq:                Name of resulting FASTQ file (created).\n");
                 fprintf(stderr, "                 -trim:                                Incompresso mode is trim sequence.\n");
                 fprintf(stderr, "                 -5 (or) -3:                           Sequence trimming occurs at 5' end or 3' end.\n");
-                fprintf(stderr, "                 -p: (Optional)                        Option to print records of first matches found (Off by default).\n");
+                fprintf(stderr, "                 -p: (Optional)                        Option to print records that are trimmed (Off by default).\n");
                 fprintf(stderr, "                 trim_sequence:                        The sequence for the program to search for and trim sequences based on.\n");
                 fprintf(stderr, "                 -debug: (Optional)                    Option to enable debug output (Off by default).\n");
             }
@@ -379,8 +379,7 @@ int main(int argc, char ** argv)
         else if (i_mode == ICM::FreqInfo)
             printf("Not implemented yet.\n"); 
         else if (i_mode == ICM::Trim)
-            // Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
-            printf("Not implemented yet.\n"); 
+            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
     } 
     // TODO when delete[] rec; is in in incompresso, memory error occurs here
     MPI_Barrier(MPI_COMM_WORLD);
