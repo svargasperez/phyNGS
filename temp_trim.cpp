@@ -13,10 +13,10 @@ using std::string;
  * @brief Attempts to find part of a pattern on an end of text,
  *        as if the pattern continued off the edge of the text.
  *        At least half of the pattern must be present.
- *        
+ *
  *        Example: text="o bar baz qux" with pat="foo bar" (left side);
  *        would return 5 because "(fo)o bar". has 5/7 characters.
- * 
+ *
  * @param text C string of the text to be searched.
  * @param text_end Pointer to the end of the C string to be searched.
  * @param pat Pattern to search for in the C string text.
@@ -43,6 +43,51 @@ int32 partial_search(const char *text, const char *text_end, const string pat, b
         }
 
     return -1; // No match
+}
+
+int32 trim5(const char *dna_seq, int32 seq_len, const string pat)
+{
+    const char *seq_end = dna_seq + seq_len;
+
+    // Do not trim if sequence is smaller than pattern
+    if (seq_len < pat.size())
+    {
+        printf("Sequence length (%d) shorter than pattern (%lu)\n", seq_len, pat.size());
+        return 0; // Do not change start position
+    }
+
+    int32 index;
+    int32 partial_len;
+    int32 search_offset = MAX(seq_len / 2, pat.size());
+
+    // Check if start of dna sequence has the pattern
+    auto bm_searcher = std::boyer_moore_searcher(pat.begin(), pat.end());
+    const char *pat_it = std::search(dna_seq, dna_seq + search_offset, bm_searcher);
+    if (pat_it != dna_seq + search_offset)
+        index = std::distance(dna_seq, pat_it);
+    else
+        index = -1;
+    printf("  First index of pattern in string: %d\n", index);
+
+    // Trim if start of dna sequence has the pattern
+    if (pat_it != dna_seq + search_offset)
+    {
+        printf("5' end contains adapter sequence (index %d)\n", index);
+        // Start position excluding adapter sequence
+        return std::distance(dna_seq, pat_it) + pat.size();
+    }
+    // Trim if dna sequence has part of the pattern
+    else if ((partial_len = partial_search(dna_seq, seq_end, pat, true)) != -1)
+    {
+        printf("5' end contains partial adapter sequence (%d/%lu)\n",
+               partial_len, pat.size());
+        return partial_len;
+    }
+    else
+    {
+        printf("No 5' match with adapter sequence\n");
+        return 0; // Do not change start position
+    }
 }
 
 void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
@@ -131,10 +176,14 @@ int main(int argc, char **argv)
     string pat = argv[2];
 
     // Possibly overallocate on stack b/c trimmed seq will never exceed full seq
-    char trimmed_dna_seq[seq_len];
+    char trimmed_dna_seq[seq_len + 1];
 
     trim(trimmed_dna_seq, dna_seq, seq_len, pat);
     printf("Trimmed sequence: %s\n", trimmed_dna_seq);
+
+    printf("\nTRIM5\n");
+    int32 new_start = trim5(dna_seq, seq_len, pat);
+    printf("Start index %d: %s\n", new_start, dna_seq + new_start);
 
     exit(EXIT_SUCCESS);
 }
