@@ -379,7 +379,7 @@ int main(int argc, char ** argv)
         else if (i_mode == ICM::FreqInfo)
             printf("Not implemented yet.\n"); 
         else if (i_mode == ICM::Trim)
-            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
+            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, std::string(pattern), to_print, no_threads); 
     } 
     // TODO when delete[] rec; is in in incompresso, memory error occurs here
     MPI_Barrier(MPI_COMM_WORLD);
