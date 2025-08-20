@@ -1536,8 +1536,14 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
     {
       int32 new_start = trim5(rec[i].dna_seq, rec[i].seq_len, pat);
       debug_print("[%d] - rec[%u]: %d\n", p_rank, i, new_start);
+
+      // TODO: Temporary solution to record deletion using pointers
+      rec[i].orig_dna_seq = rec[i].dna_seq;
+      rec[i].orig_quality = rec[i].quality;
+
       rec[i].dna_seq += new_start;
       rec[i].quality += new_start;
+
       rec[i].seq_len -= new_start;
       rec[i].qua_len -= new_start;
 

@@ -244,7 +244,9 @@ struct Record
 
 	uchar* title;
 	uchar* dna_seq;
+	uchar* orig_dna_seq;
 	uchar* quality;
+	uchar* orig_quality;
 	uchar plus = '+';
 
 	inline Record();
@@ -264,7 +266,9 @@ Record::Record()
 	,	prev_seq_qua_len(0)
 	,	title(new uchar[100]) // For now let's set it to 100, then try to have a var with max title len in subblock
 	,	dna_seq(NULL)
+	,   orig_dna_seq(NULL)
 	,	quality(NULL)
+	,   orig_quality(NULL)
 {
 	fields_end_pos.reserve(15);
 
@@ -274,8 +278,17 @@ Record::Record()
 Record::~Record()
 {
 		delete[] title;
-		delete[] dna_seq;
-		delete[] quality;
+
+		// TODO: Temporary solution to trimming adjusting pointer
+		if (orig_dna_seq)
+			delete[] orig_dna_seq;
+		else
+			delete[] dna_seq;
+
+		if (orig_quality)
+			delete[] orig_quality;
+		else
+			delete[] quality;
 }
 
 // --------------------------------------------------------------------------------------------
