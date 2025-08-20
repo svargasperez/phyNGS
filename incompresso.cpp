@@ -1238,23 +1238,17 @@ int32 trim5(const uchar *dna_seq, int32 seq_len, const std::string pat)
     return 0; // Do not change start position
   }
 
-  int32 index;
   int32 partial_len;
   int32 search_offset = MAX(seq_len / 2, (int32)pat.size());
 
   // Check if start of dna sequence has the pattern
   auto bm_searcher = std::boyer_moore_searcher(pat.begin(), pat.end());
   const uchar *pat_it = std::search(dna_seq, dna_seq + search_offset, bm_searcher);
-  if (pat_it != dna_seq + search_offset)
-    index = std::distance(dna_seq, pat_it);
-  else
-    index = -1;
-  debug_print("  First index of pattern in string: %d\n", index);
 
   // Trim if start of dna sequence has the pattern
   if (pat_it != dna_seq + search_offset)
   {
-    debug_print("5' end contains adapter sequence (index %d)\n", index);
+    debug_print("5' end contains adapter sequence (index %d)\n", std::distance(dna_seq, pat_it));
     // Start position excluding adapter sequence
     return std::distance(dna_seq, pat_it) + pat.size();
   }
