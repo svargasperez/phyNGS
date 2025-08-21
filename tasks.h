@@ -70,4 +70,7 @@ void MakeHeader(BitStream &header_bit_stream, std::vector<BlockHeader> &p_blocks
 void ReadFooter(BitStream &footer_bit_stream, Footer &footer, std::vector<SubBlock> &p_subblocks, 
   MPI_File &input_NGSC, int32 g_size, int32 p_rank);
 
+// --------------------------------------------------------------------------------------------
+int32 Trim5(const uchar *dna_seq, int32 seq_len, const std::string pat);
+
 #endif

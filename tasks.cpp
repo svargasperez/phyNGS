@@ -13,6 +13,8 @@
 #include <map>
 #include <math.h>
 #include <algorithm>
+#include <functional>
+#include <string>
 #include "defs.h"
 #include "utils.h"
 #include "structures.h"
@@ -1422,5 +1424,80 @@ void ReadFooter(BitStream &footer_bit_stream, Footer &footer, std::vector<SubBlo
       }
     }
     footer_bit_stream.FlushInputWordBuffer();
+  }
+}
+
+/**
+ * @brief Attempts to find part of a pattern on an end of text,
+ *        as if the pattern continued off the edge of the text.
+ *        At least half of the pattern must be present.
+ *
+ *        Example: text="o bar baz qux" with pat="foo bar" (left side);
+ *        would return 5 because "(fo)o bar". has 5/7 characters.
+ *
+ * @param text C string of the text to be searched.
+ * @param text_end Pointer to the end of the C string to be searched.
+ * @param pat Pattern to search for in the C string text.
+ * @param left_side Flag, whether to search the left or right side.
+ * @return The length of the partial pattern within the text, or -1.
+ */
+int32 PartialSearch(const uchar *text, const uchar *text_end, const std::string pat, bool left_side)
+{
+  if (left_side)
+    // Try to match pat[i:] to beginning of text
+    for (int32 i = 1; i <= (int32)pat.size() / 2; i++)
+    {
+      int32 len = pat.size() - i;
+      if (pat.compare(i, len, (char *)text, len) == 0)
+        return len;
+    }
+  else
+    // Try to match pat[0:len] to end of text
+    for (int32 i = 1; i <= (int32)pat.size() / 2; i++)
+    {
+      int32 len = pat.size() - i;
+      if (pat.compare(0, len, (char *)text_end - len, len) == 0)
+        return len;
+    }
+
+  return -1; // No match
+}
+
+int32 Trim5(const uchar *dna_seq, int32 seq_len, const std::string pat)
+{
+  const uchar *seq_end = dna_seq + seq_len;
+
+  // Do not trim if sequence is smaller than pattern
+  if (seq_len < (int32)pat.size())
+  {
+    // debug_print("Sequence length (%d) shorter than pattern (%lu)\n", seq_len, pat.size());
+    return 0; // Do not change start position
+  }
+
+  int32 partial_len;
+  int32 search_offset = MAX(seq_len / 2, (int32)pat.size());
+
+  // Check if start of dna sequence has the pattern
+  auto bm_searcher = std::boyer_moore_searcher(pat.begin(), pat.end());
+  const uchar *pat_it = std::search(dna_seq, dna_seq + search_offset, bm_searcher);
+
+  // Trim if start of dna sequence has the pattern
+  if (pat_it != dna_seq + search_offset)
+  {
+    // debug_print("5' end contains adapter sequence (index %d)\n", std::distance(dna_seq, pat_it));
+    // Start position excluding adapter sequence
+    return std::distance(dna_seq, pat_it) + pat.size();
+  }
+  // Trim if dna sequence has part of the pattern
+  else if ((partial_len = PartialSearch(dna_seq, seq_end, pat, true)) != -1)
+  {
+    // debug_print("5' end contains partial adapter sequence (%d/%lu)\n",
+                // partial_len, pat.size());
+    return partial_len;
+  }
+  else
+  {
+    // debug_print("No 5' match with adapter sequence\n");
+    return 0; // Do not change start position
   }
 }
