@@ -73,4 +73,7 @@ void ReadFooter(BitStream &footer_bit_stream, Footer &footer, std::vector<SubBlo
 // --------------------------------------------------------------------------------------------
 int32 Trim5(const uchar *dna_seq, int32 seq_len, const std::string pat);
 
+// --------------------------------------------------------------------------------------------
+int32 Trim3(const uchar *dna_seq, int32 seq_len, const std::string pat);
+
 #endif
