@@ -1629,7 +1629,7 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
   if (get_debug() == true)
   {
     if (p_rank == 0)
-      printf("\nRANK\tDECO_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
+      printf("\nRANK\tTRIM_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
   
     MPI_Barrier(MPI_COMM_WORLD);
     printf("%03d\t%f\t%ld\n", p_rank, p_timer_end-p_timer_start, p_subblocks.size());
