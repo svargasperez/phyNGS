@@ -1501,3 +1501,39 @@ int32 Trim5(const uchar *dna_seq, int32 seq_len, const std::string pat)
     return 0; // Do not change start position
   }
 }
+
+int32 Trim3(const uchar *dna_seq, int32 seq_len, const std::string pat)
+{
+    const uchar *seq_end = dna_seq + seq_len;
+
+    // Do not trim if sequence is smaller than pattern
+    if (seq_len < pat.size())
+    {
+        // debug_print("Sequence length (%d) shorter than pattern (%lu)\n", seq_len, pat.size());
+        return seq_len; // Do not change length
+    }
+
+    int32 index;
+    int32 partial_len;
+    int32 search_offset = MAX(seq_len / 2, pat.size());
+
+    // Check if end of dna sequence has the pattern
+    // TODO: Improve naive algorithm (possibly custom right-most Boyer Moore)
+    const uchar *pat_it = std::find_end(seq_end - search_offset, seq_end, pat.begin(), pat.end());
+
+    // Trim if end of dna sequence has the pattern
+    if (pat_it != seq_end)
+    {
+        // debug_print("3' end contains adapter sequence (index %d)\n", index);
+        return std::distance(dna_seq, pat_it);
+    }
+    else if ((partial_len = PartialSearch(dna_seq, seq_end, pat, false)) != -1)
+    {
+        // debug_print("3' end contains partial adapter sequence (%d/%lu)\n",
+              //  partial_len, pat.size());
+        return seq_len - partial_len;
+    }
+    else
+        // debug_print("No 3' match with adapter sequence\n");
+        return seq_len;
+}

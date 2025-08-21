@@ -90,6 +90,48 @@ int32 trim5(const uchar *dna_seq, int32 seq_len, const std::string pat)
     }
 }
 
+int32 trim3(const uchar *dna_seq, int32 seq_len, const std::string pat)
+{
+    const uchar *seq_end = dna_seq + seq_len;
+
+    // Do not trim if sequence is smaller than pattern
+    if (seq_len < pat.size())
+    {
+        printf("Sequence length (%d) shorter than pattern (%lu)\n", seq_len, pat.size());
+        return seq_len; // Do not change length
+    }
+
+    int32 index;
+    int32 partial_len;
+    int32 search_offset = MAX(seq_len / 2, pat.size());
+
+    // Check if end of dna sequence has the pattern
+    // TODO: Improve naive algorithm (possibly custom right-most Boyer Moore)
+    const uchar *pat_it = std::find_end(seq_end - search_offset, seq_end, pat.begin(), pat.end());
+
+    if (pat_it != seq_end)
+        index = std::distance(dna_seq, pat_it);
+    else
+        index = -1;
+    printf("  Last index of pattern in string: %d\n", index);
+
+    // Trim if end of dna sequence has the pattern
+    if (pat_it != seq_end)
+    {
+        printf("3' end contains adapter sequence (index %d)\n", index);
+        return std::distance(dna_seq, pat_it);
+    }
+    else if ((partial_len = partial_search(dna_seq, seq_end, pat, false)) != -1)
+    {
+        printf("3' end contains partial adapter sequence (%d/%lu)\n",
+               partial_len, pat.size());
+        return seq_len - partial_len;
+    }
+    else
+        printf("No 3' match with adapter sequence\n");
+        return seq_len;
+}
+
 // void trim(char *trimmed, const char *dna_seq, int32 seq_len, const string pat)
 // {
 //     const char *seq_end = dna_seq + seq_len;
@@ -184,6 +226,10 @@ int main(int argc, char **argv)
     printf("\nTRIM5\n");
     int32 new_start = trim5((uchar *)dna_seq, seq_len, pat);
     printf("Start index %d: %s\n", new_start, dna_seq + new_start);
+
+    printf("\nTRIM3\n");
+    int32 new_length = trim3((uchar *)dna_seq, seq_len, pat);
+    printf("New length %d: %s\n", new_length, std::string(dna_seq).substr(0, new_length).c_str());
 
     exit(EXIT_SUCCESS);
 }
