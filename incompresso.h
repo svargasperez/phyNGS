@@ -29,6 +29,6 @@ void ComputeLPSArray(char* pat, int M, int* lps);
 void ToFASTA (const char * in_file, const char * out_file, int32 g_size, int32 p_rank, int32 no_threads);
 
 // --------------------------------------------------------------------------------------------
-void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank, const std::string pat, bool to_print, int32 no_threads);
+void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank, const std::string pat, bool trim_5_prime, bool to_print, int32 no_threads);
 
 #endif

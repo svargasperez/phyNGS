@@ -60,6 +60,7 @@ int main(int argc, char ** argv)
     ProgramMode p_mode = PM::Unset;
     InCompressoMode i_mode = ICM::Unset;
     char *pattern = NULL;
+    bool trim_5_prime = true;
     bool to_print = false;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
@@ -299,7 +300,7 @@ int main(int argc, char ** argv)
     }
 
     // Checks parameter order for decompression
-    if (p_mode == PM::Decompress && (in_file_end.compare("ngsc") != 0 || out_file_end.compare("fastq") != 0))
+    if ((p_mode == PM::Decompress || i_mode == ICM::Trim) && (in_file_end.compare("ngsc") != 0 || out_file_end.compare("fastq") != 0))
     {
         if (p_rank == 0)
         {
@@ -310,8 +311,8 @@ int main(int argc, char ** argv)
         exit(1);
     }
 
-    // Checks input parameter file type for sequence searches, nucleotide frequency information, and trim modes
-    if ((i_mode == ICM::FindFirst || i_mode == ICM::FindAll || i_mode == ICM::FreqInfo || i_mode == ICM::Trim) && in_file_end.compare("ngsc") != 0 )
+    // Checks input parameter file type for sequence searches and nucleotide frequency information
+    if ((i_mode == ICM::FindFirst || i_mode == ICM::FindAll || i_mode == ICM::FreqInfo) && in_file_end.compare("ngsc") != 0 )
     {
         if (p_rank == 0)
             fprintf(stderr, "\n[E] ERROR: Incorrect input file ending. Correct ending is: input_filename.ngsc.\n");
@@ -343,9 +344,10 @@ int main(int argc, char ** argv)
             pattern = argv[5];
     }
 
-    // Gets pattern to search and trim for from user if incompresso mode is sequence trim
+    // Gets pattern to trim and trim mode from user if incompresso mode is trim
     if (p_mode == PM::InCompresso && i_mode == ICM::Trim)
     {
+        // Print flag offsets pattern by 1
         if (strcmp(argv[7], "-p") == 0)
         {
             pattern = argv[8];
@@ -353,6 +355,22 @@ int main(int argc, char ** argv)
         }
         else
             pattern = argv[7];
+        
+        // Determine whether to trim on 5 or 3 prime end
+        if (strcmp(argv[6], "-5") == 0)
+            trim_5_prime = true;
+        else if (strcmp(argv[6], "-3") == 0)
+            trim_5_prime = false;
+        else // Mode isn't -5 or -3
+        {
+            if (p_rank == 0)
+            {
+                fprintf(stderr, "\n[E] ERROR: Incorrect trim mode specified, expected -5 or -3. Correct command:\n");
+                fprintf(stderr, "                 mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -[5,3] [-p] trim_sequence.\n");
+            }
+            MPI_Finalize();
+            exit(1);
+        }
     }
 
     // If hybrid not supported, then set to only one thread
@@ -371,15 +389,15 @@ int main(int argc, char ** argv)
     else if (p_mode == PM::InCompresso)
     {
         if (i_mode == ICM::FindFirst)
-            FindFirst(in_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
+            FindFirst(in_file.c_str(), g_size, p_rank, pattern, to_print, no_threads);
         else if (i_mode == ICM::FindAll)
-            FindAll(in_file.c_str(), g_size, p_rank, pattern, to_print, no_threads); 
+            FindAll(in_file.c_str(), g_size, p_rank, pattern, to_print, no_threads);
         else if (i_mode == ICM::FASTA)
-            ToFASTA(in_file.c_str(), out_file.c_str(), g_size, p_rank, no_threads); 
+            ToFASTA(in_file.c_str(), out_file.c_str(), g_size, p_rank, no_threads);
         else if (i_mode == ICM::FreqInfo)
-            printf("Not implemented yet.\n"); 
+            printf("Not implemented yet.\n");
         else if (i_mode == ICM::Trim)
-            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, std::string(pattern), to_print, no_threads); 
+            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, std::string(pattern), trim_5_prime, to_print, no_threads);
     } 
     // TODO when delete[] rec; is in in incompresso, memory error occurs here
     MPI_Barrier(MPI_COMM_WORLD);

@@ -1507,15 +1507,14 @@ int32 Trim3(const uchar *dna_seq, int32 seq_len, const std::string pat)
     const uchar *seq_end = dna_seq + seq_len;
 
     // Do not trim if sequence is smaller than pattern
-    if (seq_len < pat.size())
+    if (seq_len < (int32)pat.size())
     {
         // debug_print("Sequence length (%d) shorter than pattern (%lu)\n", seq_len, pat.size());
         return seq_len; // Do not change length
     }
 
-    int32 index;
     int32 partial_len;
-    int32 search_offset = MAX(seq_len / 2, pat.size());
+    int32 search_offset = MAX(seq_len / 2, (int32)pat.size());
 
     // Check if end of dna sequence has the pattern
     // TODO: Improve naive algorithm (possibly custom right-most Boyer Moore)
