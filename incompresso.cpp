@@ -1453,53 +1453,60 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
         }
         rec[i].seq_len = rec[i].qua_len;
       }
+
+      // TODO: Consider refactoring the record adjustments into Trim3/5 functions
+      // Trim sequences and quality scores
+      if (trim_5_prime) // Trim 5' end
+      {
+        #pragma omp for
+        for (uint32 i = 0; i < no_records; ++i)
+        {
+          int32 new_start = Trim5(rec[i].dna_seq, rec[i].seq_len, pat);
+          // debug_print("[%d] - rec[%u]: %d\n", p_rank, i, new_start);
+  
+          // TODO: Temporary solution to record deletion using pointers
+          rec[i].orig_dna_seq = rec[i].dna_seq;
+          rec[i].orig_quality = rec[i].quality;
+  
+          // Shift pointers forward to trim start of sequence
+          rec[i].dna_seq += new_start;
+          rec[i].quality += new_start;
+  
+          // Adjust lengths to compensate for trimming
+          rec[i].seq_len -= new_start;
+          rec[i].qua_len -= new_start;
+  
+          rec[i].prev_seq_qua_len = prev_qua_len;
+          prev_qua_len += (rec[i].qua_len + rec[i].seq_len) + 4;
+        }
+      }
+      else // Trim 3' end
+      {
+        #pragma omp for
+        for (uint32 i = 0; i < no_records; ++i)
+        {
+          // Add one to the length to add a newline
+          int32 new_length = Trim3(rec[i].dna_seq, rec[i].seq_len, pat);
+  
+          // End sequence with a new line
+          rec[i].dna_seq[new_length] = '\n';
+          rec[i].quality[new_length] = '\n';
+  
+          // Adjust lengths to compensate for trimming
+          rec[i].seq_len = new_length;
+          rec[i].qua_len = new_length;
+  
+          rec[i].prev_seq_qua_len = prev_qua_len;
+          prev_qua_len += (rec[i].qua_len + rec[i].seq_len) + 4;
+        }
+      }
     }
 
-    // Trim sequences and quality scores
     prev_qua_len = 0;
-    if (trim_5_prime) // Trim 5' end
+    for (uint32 i = 0; i < no_records; ++i)
     {
-      // #pragma omp for TODO: Determine how to parallelize the cumulative lengths
-      for (uint32 i = 0; i < no_records; ++i)
-      {
-        int32 new_start = Trim5(rec[i].dna_seq, rec[i].seq_len, pat);
-        // debug_print("[%d] - rec[%u]: %d\n", p_rank, i, new_start);
-
-        // TODO: Temporary solution to record deletion using pointers
-        rec[i].orig_dna_seq = rec[i].dna_seq;
-        rec[i].orig_quality = rec[i].quality;
-
-        // Shift pointers forward to trim start of sequence
-        rec[i].dna_seq += new_start;
-        rec[i].quality += new_start;
-
-        // Adjust lengths to compensate for trimming
-        rec[i].seq_len -= new_start;
-        rec[i].qua_len -= new_start;
-
-        rec[i].prev_seq_qua_len = prev_qua_len;
-        prev_qua_len += (rec[i].qua_len + rec[i].seq_len) + 4;
-      }
-    }
-    else // Trim 3' end
-    {
-      // #pragma omp for TODO: Determine how to parallelize the cumulative lengths
-      for (uint32 i = 0; i < no_records; ++i)
-      {
-        // Add one to the length to add a newline
-        int32 new_length = Trim3(rec[i].dna_seq, rec[i].seq_len, pat);
-
-        // End sequence with a new line
-        rec[i].dna_seq[new_length] = '\n';
-        rec[i].quality[new_length] = '\n';
-
-        // Adjust lengths to compensate for trimming
-        rec[i].seq_len = new_length;
-        rec[i].qua_len = new_length;
-
-        rec[i].prev_seq_qua_len = prev_qua_len;
-        prev_qua_len += (rec[i].qua_len + rec[i].seq_len) + 4;
-      }
+      rec[i].prev_seq_qua_len = prev_qua_len;
+      prev_qua_len += (rec[i].qua_len + rec[i].seq_len) + 4;
     }
 
     // Including mpi_wait to be able to implement non-blocking asynchronous writing
