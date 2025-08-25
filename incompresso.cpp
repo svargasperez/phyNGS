@@ -1590,7 +1590,7 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
     // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-      write_performance_file(p_timer_end-p_timer_start, "Decom", g_size, no_threads, "");
+      write_performance_file(p_timer_end-p_timer_start, "Trim", g_size, no_threads, "");
   }
 
   MPI_File_close(&input_NGSC);
