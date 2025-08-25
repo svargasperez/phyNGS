@@ -1475,9 +1475,6 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
           // Adjust lengths to compensate for trimming
           rec[i].seq_len -= new_start;
           rec[i].qua_len -= new_start;
-  
-          rec[i].prev_seq_qua_len = prev_qua_len;
-          prev_qua_len += (rec[i].qua_len + rec[i].seq_len) + 4;
         }
       }
       else // Trim 3' end
@@ -1495,9 +1492,6 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
           // Adjust lengths to compensate for trimming
           rec[i].seq_len = new_length;
           rec[i].qua_len = new_length;
-  
-          rec[i].prev_seq_qua_len = prev_qua_len;
-          prev_qua_len += (rec[i].qua_len + rec[i].seq_len) + 4;
         }
       }
     }
