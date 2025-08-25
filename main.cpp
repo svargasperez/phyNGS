@@ -253,14 +253,14 @@ int main(int argc, char ** argv)
 
 
         // Checks parameters for sequence trimming mode
-        if (i_mode == ICM::Trim && (argc < 8 || argc > 10)) 
+        if (i_mode == ICM::Trim && (argc != 8 && argc != 9)) 
         {
             if (p_rank == 0)
             {
                 fprintf(stderr, "\n[E] ERROR: Incorrect number of arguments. Usage:\n");
-                fprintf(stderr, "\n           mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -5 [-p] trim_sequence.\n");
+                fprintf(stderr, "\n           mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -5 trim_sequence.\n");
                 fprintf(stderr, "                                                 or\n");
-                fprintf(stderr, "\n           mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -3 [-p] trim_sequence.\n");
+                fprintf(stderr, "\n           mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -3 trim_sequence.\n");
                 fprintf(stderr, "                 mpiexec:                              Command to run MPI applications.\n");
                 fprintf(stderr, "                 -np p:                                Number of MPI processes to be used, where p is a number greater than 1.\n");
                 fprintf(stderr, "                 ./main:                               main application.\n");
@@ -270,7 +270,6 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "                 output_filename.fastq:                Name of resulting FASTQ file (created).\n");
                 fprintf(stderr, "                 -trim:                                Incompresso mode is trim sequence.\n");
                 fprintf(stderr, "                 -5 (or) -3:                           Sequence trimming occurs at 5' end or 3' end.\n");
-                fprintf(stderr, "                 -p: (Optional)                        Option to print records that are trimmed (Off by default).\n");
                 fprintf(stderr, "                 trim_sequence:                        The sequence for the program to search for and trim sequences based on.\n");
                 fprintf(stderr, "                 -debug: (Optional)                    Option to enable debug output (Off by default).\n");
             }
@@ -304,8 +303,8 @@ int main(int argc, char ** argv)
     {
         if (p_rank == 0)
         {
-            fprintf(stderr, "\n[E] ERROR: Incorrect input or output file endings. Correct command:\n");
-            fprintf(stderr, "                 mpiexec -np p ./main -d num_threads input_filename.ngsc output_filename.fastq.\n");
+            fprintf(stderr, "\n[E] ERROR: Incorrect input or output file endings. Correct endings:\n");
+            fprintf(stderr, "                 input_filename.ngsc output_filename.fastq.\n");
         }
         MPI_Finalize();
         exit(1);
@@ -347,14 +346,7 @@ int main(int argc, char ** argv)
     // Gets pattern to trim and trim mode from user if incompresso mode is trim
     if (p_mode == PM::InCompresso && i_mode == ICM::Trim)
     {
-        // Print flag offsets pattern by 1
-        if (strcmp(argv[7], "-p") == 0)
-        {
-            pattern = argv[8];
-            to_print = true;
-        }
-        else
-            pattern = argv[7];
+        pattern = argv[7];
         
         // Determine whether to trim on 5 or 3 prime end
         if (strcmp(argv[6], "-5") == 0)
@@ -366,7 +358,7 @@ int main(int argc, char ** argv)
             if (p_rank == 0)
             {
                 fprintf(stderr, "\n[E] ERROR: Incorrect trim mode specified, expected -5 or -3. Correct command:\n");
-                fprintf(stderr, "                 mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -[5,3] [-p] trim_sequence.\n");
+                fprintf(stderr, "                 mpiexec -np p ./main -i num_threads input_filename.ngsc output_filename.ngsc -trim -[5,3] trim_sequence.\n");
             }
             MPI_Finalize();
             exit(1);
@@ -397,7 +389,7 @@ int main(int argc, char ** argv)
         else if (i_mode == ICM::FreqInfo)
             printf("Not implemented yet.\n");
         else if (i_mode == ICM::Trim)
-            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, std::string(pattern), trim_5_prime, to_print, no_threads);
+            Trim(in_file.c_str(), out_file.c_str(), g_size, p_rank, std::string(pattern), trim_5_prime, no_threads);
     } 
     // TODO when delete[] rec; is in in incompresso, memory error occurs here
     MPI_Barrier(MPI_COMM_WORLD);
