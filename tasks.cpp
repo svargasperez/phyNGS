@@ -1486,7 +1486,7 @@ int32 Trim5(const uchar *dna_seq, int32 seq_len, const std::string pat)
   {
     // debug_print("5' end contains adapter sequence (index %d)\n", std::distance(dna_seq, pat_it));
     // Start position excluding adapter sequence
-    return std::distance(dna_seq, pat_it) + pat.size();
+    return pat_it - dna_seq + (int32)pat.size();
   }
   // Trim if dna sequence has part of the pattern
   else if ((partial_len = PartialSearch(dna_seq, seq_end, pat, true)) != -1)
@@ -1524,7 +1524,7 @@ int32 Trim3(const uchar *dna_seq, int32 seq_len, const std::string pat)
     if (pat_it != seq_end)
     {
         // debug_print("3' end contains adapter sequence (index %d)\n", index);
-        return std::distance(dna_seq, pat_it);
+        return pat_it - dna_seq;
     }
     else if ((partial_len = PartialSearch(dna_seq, seq_end, pat, false)) != -1)
     {
