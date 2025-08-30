@@ -1496,6 +1496,7 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
       }
     }
 
+    // Recalculate cumulative lengths of records
     prev_qua_len = 0;
     for (uint32 i = 0; i < no_records; ++i)
     {
@@ -1568,7 +1569,6 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
   // Stop timer
   p_timer_end = MPI_Wtime();
 
-  // TODO: Modify for trim
   // Debug: Provide size and block statistics
   if (p_rank == 0)
   {
@@ -1582,15 +1582,22 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
   {
     if (p_rank == 0)
       printf("\nRANK\tTRIM_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
-  
+
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("%03d\t%f\t%ld\n", p_rank, p_timer_end-p_timer_start, p_subblocks.size());
+    double timer_delta = p_timer_end-p_timer_start;
+    printf("%03d\t%f\t%ld\n", p_rank, timer_delta, p_subblocks.size());
   
+    // Gather performance data from all processes
+    double timer_max;
+    MPI_Reduce(&timer_delta, &timer_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
     // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-      write_performance_file(p_timer_end-p_timer_start, "Trim", g_size, no_threads, "");
+    {
+      write_performance_file(timer_max, "Trim", g_size, no_threads, "");
+      printf("\nMax runtime: %f\n", timer_max);
+    }
   }
 
   MPI_File_close(&input_NGSC);
