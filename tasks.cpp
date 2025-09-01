@@ -1443,20 +1443,28 @@ void ReadFooter(BitStream &footer_bit_stream, Footer &footer, std::vector<SubBlo
  */
 int32 PartialSearch(const uchar *text, const uchar *text_end, const std::string pat, bool left_side)
 {
+  const char *pat_ptr = pat.data();
+
   if (left_side)
-    // Try to match pat[i:] to beginning of text
-    for (int32 i = 1; i <= (int32)pat.size() / 2; i++)
+    // Try to match pat[offset:] to beginning of text
+    for (int32 len = pat.size() - 1; len >= (int32)((pat.size() + 1) / 2); --len)
     {
-      int32 len = pat.size() - i;
-      if (pat.compare(i, len, (char *)text, len) == 0)
+      int32 offset = pat.size() - len;
+
+      // Test first character (cheap for branch prediction)
+      if (pat[offset] != text[0]) continue;
+      
+      if (memcmp(pat_ptr + offset, text, len) == 0)
         return len;
     }
   else
     // Try to match pat[0:len] to end of text
-    for (int32 i = 1; i <= (int32)pat.size() / 2; i++)
+    for (int32 len = pat.size() - 1; len >= (int32)((pat.size() + 1) / 2); --len)
     {
-      int32 len = pat.size() - i;
-      if (pat.compare(0, len, (char *)text_end - len, len) == 0)
+      // Test last character (cheap for branch prediction)
+      if (pat[len - 1] != *(text_end - 1)) continue;
+
+      if (memcmp(pat_ptr, text_end - len, len) == 0)
         return len;
     }
 
