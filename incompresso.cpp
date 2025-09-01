@@ -1592,7 +1592,6 @@ void Trim(const char *in_file, const char *out_file, int32 g_size, int32 p_rank,
     MPI_Reduce(&timer_delta, &timer_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
     // Write performance data to file
-    MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
     {
       write_performance_file(timer_max, "Trim", g_size, no_threads, "");
