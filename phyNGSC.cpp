@@ -974,13 +974,20 @@ void CompressData(const char * in_file, const char * out_file, int32 g_size, int
       printf("\nRANK\tCOMP_TIME\tN_BLOCK\tN_SUBBLOCKS\n----------------------------------------------\n");
   
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("%03d\t%f\t%ld\t%d\n", p_rank, p_timer_end-p_timer_start, timestamps.size(), p_subblock_count);
+    double timer_delta = p_timer_end-p_timer_start;
+    printf("%03d\t%f\t%ld\t%d\n", p_rank, timer_delta, timestamps.size(), p_subblock_count);
   
+    // Gather performance data from all processes
+    double timer_max;
+    MPI_Reduce(&timer_delta, &timer_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
     // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-      write_performance_file(p_timer_end-p_timer_start, "Com", g_size, no_threads, "");
+    {
+      write_performance_file(timer_max, "Com", g_size, no_threads, "");
+      printf("\nMax runtime: %f\n", timer_max);
+    }
   }
 
 

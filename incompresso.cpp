@@ -433,16 +433,24 @@ bool FindFirst(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool 
   {
     if (p_rank == 0)
       printf("\nRANK\tFIND_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
-  
+
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
+    double timer_delta = p_timer_end-p_timer_start;
+    printf("%03d\t%f\t%ld\n", p_rank, timer_delta, p_subblocks.size());
+  
+    // Gather performance data from all processes
+    double timer_max;
+    MPI_Reduce(&timer_delta, &timer_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
     // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-      write_performance_file(p_timer_end-p_timer_start, "Findfirst", g_size, no_threads, pat);
+    {
+      write_performance_file(timer_max, "Findfirst", g_size, no_threads, pat);
+      printf("\nMax runtime: %f\n", timer_max);
+    }
   }
-  
+
   MPI_File_close(&input_NGSC);
   return global_pattern_found;
 }
@@ -758,15 +766,22 @@ void FindAll(const char *in_file, int32 g_size, int32 p_rank, char *pat, bool to
   {
     if (p_rank == 0)
       printf("\nRANK\tFIND_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
-  
+
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
+    double timer_delta = p_timer_end-p_timer_start;
+    printf("%03d\t%f\t%ld\n", p_rank, timer_delta, p_subblocks.size());
   
+    // Gather performance data from all processes
+    double timer_max;
+    MPI_Reduce(&timer_delta, &timer_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
     // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-      write_performance_file(p_timer_end-p_timer_start, "Findall", g_size, no_threads, pat);
+    {
+      write_performance_file(timer_max, "Findall", g_size, no_threads, pat);
+      printf("\nMax runtime: %f\n", timer_max);
+    }
   }
 
   MPI_File_close(&input_NGSC);
@@ -1174,15 +1189,22 @@ void ToFASTA(const char *in_file, const char *out_file, int32 g_size, int32 p_ra
   {
     if (p_rank == 0)
       printf("\nRANK\tFASTA_TIME\tN_SUBBLOCKS\n----------------------------------------------\n");
-  
+
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("%03d\t%f\t%ld\n", p_rank, p_timer_end - p_timer_start, p_subblocks.size());
+    double timer_delta = p_timer_end-p_timer_start;
+    printf("%03d\t%f\t%ld\n", p_rank, timer_delta, p_subblocks.size());
   
+    // Gather performance data from all processes
+    double timer_max;
+    MPI_Reduce(&timer_delta, &timer_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
     // Write performance data to file
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank == 0)
-      write_performance_file(p_timer_end-p_timer_start, "FASTA", g_size, no_threads, "");
+    {
+      write_performance_file(timer_max, "FASTA", g_size, no_threads, "");
+      printf("\nMax runtime: %f\n", timer_max);
+    }
   }
 
   MPI_File_close(&input_NGSC);
