@@ -13,6 +13,7 @@ trim_mode=5
 declare -a sequences=("TATA" "AAATAAATATAGAACC")
 sequence=TATA
 
+echo "Process counts vertically from $min_p to $max_p"
 echo "Thread counts horizontally from $min_t to $max_t"
 
 for filesize in "${sizes[@]}"; do
